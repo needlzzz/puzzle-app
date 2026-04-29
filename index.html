@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Jigsaw Puzzle</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Start Screen -->
+  <div id="start-screen">
+    <h1>🧩 Jigsaw Puzzle</h1>
+    <p>Choose your difficulty</p>
+    <div id="difficulty-buttons">
+      <button class="diff-btn" data-pieces="50">50 pieces</button>
+      <button class="diff-btn" data-pieces="100">100 pieces</button>
+      <button class="diff-btn" data-pieces="150">150 pieces</button>
+      <button class="diff-btn" data-pieces="200">200 pieces</button>
+    </div>
+    <div id="loading" class="hidden">
+      <p>Loading animal image...</p>
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen" class="hidden">
+    <canvas id="puzzle-canvas"></canvas>
+    <div id="ui-bar">
+      <div id="timer">⏱ 00:00</div>
+      <div id="piece-counter">0 / 0</div>
+      <button id="hint-toggle" title="Toggle image hint">🖼 Hint</button>
+      <button id="new-puzzle-btn" title="New puzzle">🔄 New</button>
+    </div>
+  </div>
+
+  <!-- Win Overlay -->
+  <div id="win-overlay" class="hidden">
+    <canvas id="confetti-canvas"></canvas>
+    <div id="win-content">
+      <h2>🎉 Puzzle Complete!</h2>
+      <p id="win-time"></p>
+      <p id="win-pieces"></p>
+      <button id="win-new-btn">New Puzzle</button>
+    </div>
+  </div>
+
+  <script src="puzzle-engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
