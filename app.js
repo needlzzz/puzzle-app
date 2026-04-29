@@ -168,121 +168,116 @@
   }
 
   // ===== IMAGE LOADING =====
-  // 10 built-in procedural animal images as reliable fallbacks
-  const BUILTIN_ANIMALS = [
-    { name: 'Lion',      emoji: '🦁', bg: ['#F4A460','#CD853F','#DEB887'], accent: '#8B4513' },
-    { name: 'Elephant',  emoji: '🐘', bg: ['#708090','#778899','#B0C4DE'], accent: '#2F4F4F' },
-    { name: 'Fox',       emoji: '🦊', bg: ['#FF8C00','#FF6347','#FFD700'], accent: '#8B0000' },
-    { name: 'Dolphin',   emoji: '🐬', bg: ['#00CED1','#1E90FF','#87CEEB'], accent: '#000080' },
-    { name: 'Owl',       emoji: '🦉', bg: ['#2E0854','#4B0082','#6A0DAD'], accent: '#DDA0DD' },
-    { name: 'Penguin',   emoji: '🐧', bg: ['#4682B4','#B0E0E6','#F0F8FF'], accent: '#191970' },
-    { name: 'Tiger',     emoji: '🐯', bg: ['#FF8C00','#FF4500','#FFD700'], accent: '#000000' },
-    { name: 'Bear',      emoji: '🐻', bg: ['#228B22','#2E8B57','#90EE90'], accent: '#006400' },
-    { name: 'Cat',       emoji: '🐱', bg: ['#FF69B4','#FFB6C1','#FFC0CB'], accent: '#C71585' },
-    { name: 'Wolf',      emoji: '🐺', bg: ['#2F4F4F','#696969','#A9A9A9'], accent: '#C0C0C0' },
+  // Multiple image sources tried in order. Each returns real animal photos.
+  // Unsplash photo IDs known to be animals (free to use under Unsplash license)
+  const UNSPLASH_ANIMAL_IDS = [
+    'YozNeHM8MaA',  // lion
+    'u_kMWN-BWyU',  // elephant
+    'OYGN_PWBf4k',  // fox
+    'fikJnGPXxJ0',  // dolphin
+    'pG-_La1_PDA',  // owl
+    'dY-IU16GvPY',  // penguin
+    'MCYBfbRVYeU',  // tiger
+    'eLiJnXFBisc',  // bear
+    '75715CVEJhI',  // cat
+    'SIgX-FASxps',  // wolf
   ];
 
-  function generateBuiltinImage(index) {
-    const animal = BUILTIN_ANIMALS[index % BUILTIN_ANIMALS.length];
+  // Try loading an image from a URL with timeout and CORS check
+  function tryLoadImage(url, timeoutMs) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      let done = false;
+
+      const fail = () => { if (!done) { done = true; resolve(null); } };
+      const timer = setTimeout(fail, timeoutMs);
+
+      img.onload = () => {
+        if (done) return;
+        clearTimeout(timer);
+        // Verify not tainted
+        try {
+          const tc = document.createElement('canvas');
+          tc.width = 1; tc.height = 1;
+          const tctx = tc.getContext('2d');
+          tctx.drawImage(img, 0, 0);
+          tctx.getImageData(0, 0, 1, 1);
+          done = true;
+          resolve(img);
+        } catch (e) {
+          fail();
+        }
+      };
+      img.onerror = () => { clearTimeout(timer); fail(); };
+      img.src = url;
+    });
+  }
+
+  // Procedural fallback — only used if ALL network sources fail
+  function generateProceduralFallback() {
+    const animals = [
+      { name: 'Lion',     emoji: '🦁', bg: ['#F4A460','#CD853F','#DEB887'] },
+      { name: 'Elephant', emoji: '🐘', bg: ['#708090','#778899','#B0C4DE'] },
+      { name: 'Fox',      emoji: '🦊', bg: ['#FF8C00','#FF6347','#FFD700'] },
+      { name: 'Dolphin',  emoji: '🐬', bg: ['#00CED1','#1E90FF','#87CEEB'] },
+      { name: 'Owl',      emoji: '🦉', bg: ['#2E0854','#4B0082','#6A0DAD'] },
+      { name: 'Penguin',  emoji: '🐧', bg: ['#4682B4','#B0E0E6','#F0F8FF'] },
+      { name: 'Tiger',    emoji: '🐯', bg: ['#FF8C00','#FF4500','#FFD700'] },
+      { name: 'Bear',     emoji: '🐻', bg: ['#228B22','#2E8B57','#90EE90'] },
+      { name: 'Cat',      emoji: '🐱', bg: ['#FF69B4','#FFB6C1','#FFC0CB'] },
+      { name: 'Wolf',     emoji: '🐺', bg: ['#2F4F4F','#696969','#A9A9A9'] },
+    ];
+    const a = animals[Math.floor(Math.random() * animals.length)];
     const c = document.createElement('canvas');
-    c.width = PUZZLE_IMAGE_W;
-    c.height = PUZZLE_IMAGE_H;
+    c.width = PUZZLE_IMAGE_W; c.height = PUZZLE_IMAGE_H;
     const cx = c.getContext('2d');
     const W = PUZZLE_IMAGE_W, H = PUZZLE_IMAGE_H;
 
-    // Background gradient
     const grad = cx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0, animal.bg[0]);
-    grad.addColorStop(0.5, animal.bg[1]);
-    grad.addColorStop(1, animal.bg[2]);
-    cx.fillStyle = grad;
-    cx.fillRect(0, 0, W, H);
+    grad.addColorStop(0, a.bg[0]); grad.addColorStop(0.5, a.bg[1]); grad.addColorStop(1, a.bg[2]);
+    cx.fillStyle = grad; cx.fillRect(0, 0, W, H);
 
-    // Decorative circles
-    const seed = index * 137.5;
     for (let i = 0; i < 25; i++) {
-      const angle = seed + i * 0.7;
-      const r = 30 + ((i * 47 + index * 13) % 70);
-      const x = (W * 0.1) + ((i * 131 + index * 73) % (W * 0.8));
-      const y = (H * 0.1) + ((i * 97 + index * 53) % (H * 0.8));
       cx.beginPath();
-      cx.arc(x, y, r, 0, Math.PI * 2);
-      cx.fillStyle = `hsla(${(angle * 57) % 360}, 60%, 65%, 0.2)`;
+      cx.arc((W * 0.1) + ((i * 131) % (W * 0.8)), (H * 0.1) + ((i * 97) % (H * 0.8)), 30 + (i * 47 % 70), 0, Math.PI * 2);
+      cx.fillStyle = `hsla(${(i * 40) % 360}, 60%, 65%, 0.2)`;
       cx.fill();
     }
 
-    // Wavy stripes for texture
-    cx.strokeStyle = `hsla(0, 0%, 100%, 0.08)`;
-    cx.lineWidth = 3;
-    for (let y = 30; y < H; y += 40) {
-      cx.beginPath();
-      cx.moveTo(0, y);
-      for (let x = 0; x <= W; x += 20) {
-        cx.lineTo(x, y + Math.sin((x + seed) * 0.03) * 15);
-      }
-      cx.stroke();
-    }
-
-    // Large emoji
     cx.font = `${Math.min(W, H) * 0.35}px sans-serif`;
-    cx.textAlign = 'center';
-    cx.textBaseline = 'middle';
-    cx.fillText(animal.emoji, W / 2, H * 0.42);
-
-    // Animal name
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.fillText(a.emoji, W / 2, H * 0.42);
     cx.fillStyle = 'rgba(255,255,255,0.9)';
     cx.font = `bold ${H * 0.08}px sans-serif`;
-    cx.fillText(animal.name, W / 2, H * 0.78);
-
-    // Subtle border
-    cx.strokeStyle = animal.accent;
-    cx.lineWidth = 6;
-    cx.strokeRect(3, 3, W - 6, H - 6);
+    cx.fillText(a.name, W / 2, H * 0.78);
 
     return c;
   }
 
-  function loadAnimalImage() {
-    return new Promise((resolve) => {
-      const keyword = ANIMAL_KEYWORDS[Math.floor(Math.random() * ANIMAL_KEYWORDS.length)];
-      const url = `https://loremflickr.com/${PUZZLE_IMAGE_W}/${PUZZLE_IMAGE_H}/${keyword}`;
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
+  async function loadAnimalImage() {
+    const W = PUZZLE_IMAGE_W, H = PUZZLE_IMAGE_H;
 
-      let resolved = false;
-      const fallback = () => {
-        if (resolved) return;
-        resolved = true;
-        const idx = Math.floor(Math.random() * BUILTIN_ANIMALS.length);
-        resolve(generateBuiltinImage(idx));
-      };
+    // Source 1: Unsplash direct (most reliable, real photos)
+    const unsplashId = UNSPLASH_ANIMAL_IDS[Math.floor(Math.random() * UNSPLASH_ANIMAL_IDS.length)];
+    const unsplashUrl = `https://images.unsplash.com/photo-${unsplashId}?w=${W}&h=${H}&fit=crop&auto=format&q=70`;
+    const img1 = await tryLoadImage(unsplashUrl, 5000);
+    if (img1) return img1;
 
-      const timeout = setTimeout(fallback, 6000);
+    // Source 2: Lorem Flickr (keyword-based animal photos)
+    const keyword = ANIMAL_KEYWORDS[Math.floor(Math.random() * ANIMAL_KEYWORDS.length)];
+    const flickrUrl = `https://loremflickr.com/${W}/${H}/${keyword}`;
+    const img2 = await tryLoadImage(flickrUrl, 5000);
+    if (img2) return img2;
 
-      img.onload = () => {
-        if (resolved) return;
-        clearTimeout(timeout);
-        try {
-          const test = document.createElement('canvas');
-          test.width = 1;
-          test.height = 1;
-          const tctx = test.getContext('2d');
-          tctx.drawImage(img, 0, 0);
-          tctx.getImageData(0, 0, 1, 1);
-          resolved = true;
-          resolve(img);
-        } catch (e) {
-          fallback();
-        }
-      };
+    // Source 3: Picsum (random high-quality photos, not animal-specific but real)
+    const picsumId = 10 + Math.floor(Math.random() * 200);
+    const picsumUrl = `https://picsum.photos/id/${picsumId}/${W}/${H}`;
+    const img3 = await tryLoadImage(picsumUrl, 5000);
+    if (img3) return img3;
 
-      img.onerror = () => {
-        clearTimeout(timeout);
-        fallback();
-      };
-
-      img.src = url;
-    });
+    // Last resort: procedural fallback
+    return generateProceduralFallback();
   }
 
   // ===== COORDINATE TRANSFORMS (delegate to engine) =====
