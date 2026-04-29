@@ -168,6 +168,80 @@
   }
 
   // ===== IMAGE LOADING =====
+  // 10 built-in procedural animal images as reliable fallbacks
+  const BUILTIN_ANIMALS = [
+    { name: 'Lion',      emoji: '🦁', bg: ['#F4A460','#CD853F','#DEB887'], accent: '#8B4513' },
+    { name: 'Elephant',  emoji: '🐘', bg: ['#708090','#778899','#B0C4DE'], accent: '#2F4F4F' },
+    { name: 'Fox',       emoji: '🦊', bg: ['#FF8C00','#FF6347','#FFD700'], accent: '#8B0000' },
+    { name: 'Dolphin',   emoji: '🐬', bg: ['#00CED1','#1E90FF','#87CEEB'], accent: '#000080' },
+    { name: 'Owl',       emoji: '🦉', bg: ['#2E0854','#4B0082','#6A0DAD'], accent: '#DDA0DD' },
+    { name: 'Penguin',   emoji: '🐧', bg: ['#4682B4','#B0E0E6','#F0F8FF'], accent: '#191970' },
+    { name: 'Tiger',     emoji: '🐯', bg: ['#FF8C00','#FF4500','#FFD700'], accent: '#000000' },
+    { name: 'Bear',      emoji: '🐻', bg: ['#228B22','#2E8B57','#90EE90'], accent: '#006400' },
+    { name: 'Cat',       emoji: '🐱', bg: ['#FF69B4','#FFB6C1','#FFC0CB'], accent: '#C71585' },
+    { name: 'Wolf',      emoji: '🐺', bg: ['#2F4F4F','#696969','#A9A9A9'], accent: '#C0C0C0' },
+  ];
+
+  function generateBuiltinImage(index) {
+    const animal = BUILTIN_ANIMALS[index % BUILTIN_ANIMALS.length];
+    const c = document.createElement('canvas');
+    c.width = PUZZLE_IMAGE_W;
+    c.height = PUZZLE_IMAGE_H;
+    const cx = c.getContext('2d');
+    const W = PUZZLE_IMAGE_W, H = PUZZLE_IMAGE_H;
+
+    // Background gradient
+    const grad = cx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, animal.bg[0]);
+    grad.addColorStop(0.5, animal.bg[1]);
+    grad.addColorStop(1, animal.bg[2]);
+    cx.fillStyle = grad;
+    cx.fillRect(0, 0, W, H);
+
+    // Decorative circles
+    const seed = index * 137.5;
+    for (let i = 0; i < 25; i++) {
+      const angle = seed + i * 0.7;
+      const r = 30 + ((i * 47 + index * 13) % 70);
+      const x = (W * 0.1) + ((i * 131 + index * 73) % (W * 0.8));
+      const y = (H * 0.1) + ((i * 97 + index * 53) % (H * 0.8));
+      cx.beginPath();
+      cx.arc(x, y, r, 0, Math.PI * 2);
+      cx.fillStyle = `hsla(${(angle * 57) % 360}, 60%, 65%, 0.2)`;
+      cx.fill();
+    }
+
+    // Wavy stripes for texture
+    cx.strokeStyle = `hsla(0, 0%, 100%, 0.08)`;
+    cx.lineWidth = 3;
+    for (let y = 30; y < H; y += 40) {
+      cx.beginPath();
+      cx.moveTo(0, y);
+      for (let x = 0; x <= W; x += 20) {
+        cx.lineTo(x, y + Math.sin((x + seed) * 0.03) * 15);
+      }
+      cx.stroke();
+    }
+
+    // Large emoji
+    cx.font = `${Math.min(W, H) * 0.35}px sans-serif`;
+    cx.textAlign = 'center';
+    cx.textBaseline = 'middle';
+    cx.fillText(animal.emoji, W / 2, H * 0.42);
+
+    // Animal name
+    cx.fillStyle = 'rgba(255,255,255,0.9)';
+    cx.font = `bold ${H * 0.08}px sans-serif`;
+    cx.fillText(animal.name, W / 2, H * 0.78);
+
+    // Subtle border
+    cx.strokeStyle = animal.accent;
+    cx.lineWidth = 6;
+    cx.strokeRect(3, 3, W - 6, H - 6);
+
+    return c;
+  }
+
   function loadAnimalImage() {
     return new Promise((resolve) => {
       const keyword = ANIMAL_KEYWORDS[Math.floor(Math.random() * ANIMAL_KEYWORDS.length)];
@@ -179,26 +253,25 @@
       const fallback = () => {
         if (resolved) return;
         resolved = true;
-        resolve(generateFallbackImage());
+        const idx = Math.floor(Math.random() * BUILTIN_ANIMALS.length);
+        resolve(generateBuiltinImage(idx));
       };
 
-      const timeout = setTimeout(fallback, 8000);
+      const timeout = setTimeout(fallback, 6000);
 
       img.onload = () => {
         if (resolved) return;
         clearTimeout(timeout);
-        // Verify the image is usable (not tainted) by trying to draw it
         try {
           const test = document.createElement('canvas');
           test.width = 1;
           test.height = 1;
           const tctx = test.getContext('2d');
           tctx.drawImage(img, 0, 0);
-          tctx.getImageData(0, 0, 1, 1); // throws if tainted
+          tctx.getImageData(0, 0, 1, 1);
           resolved = true;
           resolve(img);
         } catch (e) {
-          // Tainted image — use fallback
           fallback();
         }
       };
@@ -210,39 +283,6 @@
 
       img.src = url;
     });
-  }
-
-  function generateFallbackImage() {
-    // Return the canvas directly — it's a valid drawImage source
-    // and avoids the async Image loading issue
-    const c = document.createElement('canvas');
-    c.width = PUZZLE_IMAGE_W;
-    c.height = PUZZLE_IMAGE_H;
-    const cx = c.getContext('2d');
-
-    const grad = cx.createLinearGradient(0, 0, PUZZLE_IMAGE_W, PUZZLE_IMAGE_H);
-    grad.addColorStop(0, '#FF6B6B');
-    grad.addColorStop(0.25, '#4ECDC4');
-    grad.addColorStop(0.5, '#45B7D1');
-    grad.addColorStop(0.75, '#96CEB4');
-    grad.addColorStop(1, '#FFEAA7');
-    cx.fillStyle = grad;
-    cx.fillRect(0, 0, PUZZLE_IMAGE_W, PUZZLE_IMAGE_H);
-
-    for (let i = 0; i < 20; i++) {
-      cx.beginPath();
-      cx.arc(Math.random() * PUZZLE_IMAGE_W, Math.random() * PUZZLE_IMAGE_H, 20 + Math.random() * 80, 0, Math.PI * 2);
-      cx.fillStyle = `hsla(${Math.random() * 360}, 70%, 60%, 0.3)`;
-      cx.fill();
-    }
-
-    cx.fillStyle = '#FFF';
-    cx.font = 'bold 48px sans-serif';
-    cx.textAlign = 'center';
-    cx.textBaseline = 'middle';
-    cx.fillText('Animal Puzzle', PUZZLE_IMAGE_W / 2, PUZZLE_IMAGE_H / 2);
-
-    return c;
   }
 
   // ===== COORDINATE TRANSFORMS (delegate to engine) =====

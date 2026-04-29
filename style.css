@@ -60,6 +60,12 @@ body {
   color: #E8D5A3;
 }
 
+#start-screen .subtitle {
+  font-size: 1.1rem;
+  color: #FFD7A8;
+  font-style: italic;
+}
+
 #difficulty-buttons {
   display: flex;
   gap: 12px;
