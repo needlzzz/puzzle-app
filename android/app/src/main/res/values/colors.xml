@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="wood_dark">#FF6B4F1D</color>
+    <color name="wood_medium">#FF7A5E22</color>
+    <color name="wood_light">#FF9E7B2F</color>
+    <color name="wood_gold">#FF8B6914</color>
+    <color name="cream">#FFFFF8E7</color>
+    <color name="cream_muted">#FFE8D5A3</color>
+    <color name="cream_warm">#FFFFD7A8</color>
+    <color name="overlay_dark">#8C000000</color>
+    <color name="bar_bg">#8C000000</color>
+    <color name="btn_bg">#26FFF8E7</color>
+    <color name="btn_bg_hover">#4DFFF8E7</color>
+</resources>

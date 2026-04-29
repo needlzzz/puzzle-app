@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kaley\'s Puzzle</string>
+    <string name="title">🧩 Kaley\'s Puzzle App</string>
+    <string name="subtitle">Made with love by your PAPA ❤️</string>
+    <string name="choose_difficulty">Choose your difficulty</string>
+    <string name="pieces_20">20 pieces</string>
+    <string name="pieces_50">50 pieces</string>
+    <string name="pieces_100">100 pieces</string>
+    <string name="pieces_150">150 pieces</string>
+    <string name="hint">🖼 Hint</string>
+    <string name="new_puzzle">🔄 New</string>
+    <string name="puzzle_complete">🎉 Puzzle Complete!</string>
+    <string name="new_puzzle_btn">New Puzzle</string>
+</resources>

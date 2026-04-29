@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/wood_medium">
+
+    <!-- Start Screen -->
+    <LinearLayout
+        android:id="@+id/startScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/title"
+            android:textColor="@color/cream"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:shadowColor="#80000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="6" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/subtitle"
+            android:textColor="@color/cream_warm"
+            android:textSize="16sp"
+            android:textStyle="italic" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="@string/choose_difficulty"
+            android:textColor="@color/cream_muted"
+            android:textSize="18sp" />
+
+        <LinearLayout
+            android:id="@+id/difficultyButtons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn20"
+                style="@style/DifficultyButton"
+                android:text="@string/pieces_20" />
+
+            <Button
+                android:id="@+id/btn50"
+                style="@style/DifficultyButton"
+                android:text="@string/pieces_50" />
+
+            <Button
+                android:id="@+id/btn100"
+                style="@style/DifficultyButton"
+                android:text="@string/pieces_100" />
+
+            <Button
+                android:id="@+id/btn150"
+                style="@style/DifficultyButton"
+                android:text="@string/pieces_150" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Game Screen -->
+    <FrameLayout
+        android:id="@+id/gameScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <com.kaleys.puzzle.PuzzleView
+            android:id="@+id/puzzleView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- UI Bar -->
+        <LinearLayout
+            android:id="@+id/uiBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bar_background"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/timer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="⏱ 00:00"
+                android:textColor="@color/cream"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/pieceCounter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:fontFamily="monospace"
+                android:text="0 / 0"
+                android:textColor="@color/cream"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/hintBtn"
+                style="@style/BarButton"
+                android:layout_marginStart="16dp"
+                android:text="@string/hint" />
+
+            <Button
+                android:id="@+id/newBtn"
+                style="@style/BarButton"
+                android:layout_marginStart="8dp"
+                android:text="@string/new_puzzle" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Win Overlay -->
+    <FrameLayout
+        android:id="@+id/winOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/overlay_dark"
+        android:visibility="gone">
+
+        <com.kaleys.puzzle.ConfettiView
+            android:id="@+id/confettiView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/win_background"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="60dp"
+            android:paddingVertical="40dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/puzzle_complete"
+                android:textColor="@color/cream"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/winTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/cream_muted"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/winPieces"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/cream_muted"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/winNewBtn"
+                style="@style/DifficultyButton"
+                android:layout_marginTop="20dp"
+                android:text="@string/new_puzzle_btn" />
+        </LinearLayout>
+    </FrameLayout>
+
+</FrameLayout>
