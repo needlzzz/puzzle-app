@@ -59,9 +59,12 @@
   let lastPinchCenter = null;
 
   // ===== JIGSAW PATH DRAWING (Canvas-specific, stays here) =====
-  function drawJigsawEdge(path, len, dir) {
+  // Draw a jigsaw edge directly into the path.
+  // For top edge: draws from current point rightward along x-axis for `len` pixels.
+  // For other edges, caller provides transform functions to rotate/translate coordinates.
+  function drawJigsawEdgeDirect(path, len, dir, tx, ty) {
     if (dir === 0) {
-      path.lineTo(len, 0);
+      path.lineTo(tx(len, 0), ty(len, 0));
       return;
     }
     const tabH = len * TAB_SIZE * dir;
@@ -69,11 +72,23 @@
     const neckW = len * 0.1;
     const tabW = len * 0.14;
 
-    path.lineTo(neck - neckW, 0);
-    path.bezierCurveTo(neck - neckW, 0, neck - neckW * 1.2, -tabH * 0.4, neck - tabW, -tabH * 0.8);
-    path.bezierCurveTo(neck - tabW * 1.6, -tabH * 1.2, neck + neckW + tabW * 0.6, -tabH * 1.2, neck + tabW, -tabH * 0.8);
-    path.bezierCurveTo(neck + neckW * 1.2, -tabH * 0.4, neck + neckW, 0, neck + neckW, 0);
-    path.lineTo(len, 0);
+    path.lineTo(tx(neck - neckW, 0), ty(neck - neckW, 0));
+    path.bezierCurveTo(
+      tx(neck - neckW, 0), ty(neck - neckW, 0),
+      tx(neck - neckW * 1.2, -tabH * 0.4), ty(neck - neckW * 1.2, -tabH * 0.4),
+      tx(neck - tabW, -tabH * 0.8), ty(neck - tabW, -tabH * 0.8)
+    );
+    path.bezierCurveTo(
+      tx(neck - tabW * 1.6, -tabH * 1.2), ty(neck - tabW * 1.6, -tabH * 1.2),
+      tx(neck + neckW + tabW * 0.6, -tabH * 1.2), ty(neck + neckW + tabW * 0.6, -tabH * 1.2),
+      tx(neck + tabW, -tabH * 0.8), ty(neck + tabW, -tabH * 0.8)
+    );
+    path.bezierCurveTo(
+      tx(neck + neckW * 1.2, -tabH * 0.4), ty(neck + neckW * 1.2, -tabH * 0.4),
+      tx(neck + neckW, 0), ty(neck + neckW, 0),
+      tx(neck + neckW, 0), ty(neck + neckW, 0)
+    );
+    path.lineTo(tx(len, 0), ty(len, 0));
   }
 
   function buildPiecePath(col, row, edges) {
@@ -82,29 +97,34 @@
     const h = pieceH;
 
     path.moveTo(0, 0);
+
+    // Top edge: left to right, y=0
     const topDir = row === 0 ? 0 : -edges.h[row - 1][col];
-    { const sub = new Path2D(); sub.moveTo(0, 0); drawJigsawEdge(sub, w, topDir); path.addPath(sub); }
+    drawJigsawEdgeDirect(path, w, topDir,
+      (x, y) => x,
+      (x, y) => y
+    );
 
-    {
-      const rightDir = col === cols - 1 ? 0 : edges.v[row][col];
-      const sub = new Path2D(); sub.moveTo(0, 0); drawJigsawEdge(sub, h, rightDir);
-      const m = new DOMMatrix(); m.translateSelf(w, 0); m.rotateSelf(90);
-      path.addPath(sub, m);
-    }
+    // Right edge: top to bottom, x=w (rotate 90°: x→y, y→-x, then translate by (w,0))
+    const rightDir = col === cols - 1 ? 0 : edges.v[row][col];
+    drawJigsawEdgeDirect(path, h, rightDir,
+      (x, y) => w + y,
+      (x, y) => x
+    );
 
-    {
-      const bottomDir = row === rows - 1 ? 0 : edges.h[row][col];
-      const sub = new Path2D(); sub.moveTo(0, 0); drawJigsawEdge(sub, w, bottomDir);
-      const m = new DOMMatrix(); m.translateSelf(w, h); m.rotateSelf(180);
-      path.addPath(sub, m);
-    }
+    // Bottom edge: right to left, y=h (rotate 180°: x→-x, y→-y, then translate by (w,h))
+    const bottomDir = row === rows - 1 ? 0 : edges.h[row][col];
+    drawJigsawEdgeDirect(path, w, bottomDir,
+      (x, y) => w - x,
+      (x, y) => h - y
+    );
 
-    {
-      const leftDir = col === 0 ? 0 : -edges.v[row][col - 1];
-      const sub = new Path2D(); sub.moveTo(0, 0); drawJigsawEdge(sub, h, leftDir);
-      const m = new DOMMatrix(); m.translateSelf(0, h); m.rotateSelf(270);
-      path.addPath(sub, m);
-    }
+    // Left edge: bottom to top, x=0 (rotate 270°: x→-y, y→x, then translate by (0,h))
+    const leftDir = col === 0 ? 0 : -edges.v[row][col - 1];
+    drawJigsawEdgeDirect(path, h, leftDir,
+      (x, y) => -y,
+      (x, y) => h - x
+    );
 
     path.closePath();
     return path;
@@ -155,14 +175,46 @@
       const img = new Image();
       img.crossOrigin = 'anonymous';
 
-      const timeout = setTimeout(() => resolve(generateFallbackImage()), 8000);
-      img.onload = () => { clearTimeout(timeout); resolve(img); };
-      img.onerror = () => { clearTimeout(timeout); resolve(generateFallbackImage()); };
+      let resolved = false;
+      const fallback = () => {
+        if (resolved) return;
+        resolved = true;
+        resolve(generateFallbackImage());
+      };
+
+      const timeout = setTimeout(fallback, 8000);
+
+      img.onload = () => {
+        if (resolved) return;
+        clearTimeout(timeout);
+        // Verify the image is usable (not tainted) by trying to draw it
+        try {
+          const test = document.createElement('canvas');
+          test.width = 1;
+          test.height = 1;
+          const tctx = test.getContext('2d');
+          tctx.drawImage(img, 0, 0);
+          tctx.getImageData(0, 0, 1, 1); // throws if tainted
+          resolved = true;
+          resolve(img);
+        } catch (e) {
+          // Tainted image — use fallback
+          fallback();
+        }
+      };
+
+      img.onerror = () => {
+        clearTimeout(timeout);
+        fallback();
+      };
+
       img.src = url;
     });
   }
 
   function generateFallbackImage() {
+    // Return the canvas directly — it's a valid drawImage source
+    // and avoids the async Image loading issue
     const c = document.createElement('canvas');
     c.width = PUZZLE_IMAGE_W;
     c.height = PUZZLE_IMAGE_H;
@@ -188,11 +240,9 @@
     cx.font = 'bold 48px sans-serif';
     cx.textAlign = 'center';
     cx.textBaseline = 'middle';
-    cx.fillText('🐾 Animal Puzzle', PUZZLE_IMAGE_W / 2, PUZZLE_IMAGE_H / 2);
+    cx.fillText('Animal Puzzle', PUZZLE_IMAGE_W / 2, PUZZLE_IMAGE_H / 2);
 
-    const img = new Image();
-    img.src = c.toDataURL();
-    return img;
+    return c;
   }
 
   // ===== COORDINATE TRANSFORMS (delegate to engine) =====
