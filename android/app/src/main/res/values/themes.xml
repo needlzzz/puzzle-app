@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.KaleysPuzzle" parent="Theme.MaterialComponents.NoActionBar">
+    <style name="Theme.KaleysPuzzle" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:statusBarColor">@color/wood_dark</item>
         <item name="android:navigationBarColor">@color/wood_dark</item>
         <item name="android:windowBackground">@color/wood_medium</item>
