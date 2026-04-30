@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         hintBtn.setOnClickListener {
             vm.showHint = !vm.showHint
             hintBtn.alpha = if (vm.showHint) 1f else 0.7f
+            puzzleView.invalidate()
         }
 
         findViewById<Button>(R.id.newBtn).setOnClickListener { resetToStart() }
