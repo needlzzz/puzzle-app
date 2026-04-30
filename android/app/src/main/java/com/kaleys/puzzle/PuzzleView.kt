@@ -218,7 +218,6 @@ class PuzzleView @JvmOverloads constructor(
         }
 
         canvas.restore()
-        invalidate() // continuous rendering
     }
 
     private fun drawPiece(
@@ -358,6 +357,7 @@ class PuzzleView @JvmOverloads constructor(
             p.x += dx
             p.y += dy
         }
+        invalidate()
     }
 
     private fun onPanMove(event: MotionEvent) {
@@ -368,6 +368,7 @@ class PuzzleView @JvmOverloads constructor(
         vm.cameraY -= dy
         lastPanX = event.x
         lastPanY = event.y
+        invalidate()
     }
 
     private fun onPinchStart(event: MotionEvent) {
@@ -405,6 +406,7 @@ class PuzzleView @JvmOverloads constructor(
         lastPinchDist = dist
         lastPinchCenterX = cx
         lastPinchCenterY = cy
+        invalidate()
     }
 
     private fun onPointerUp() {
@@ -416,6 +418,7 @@ class PuzzleView @JvmOverloads constructor(
         dragPiece = null
         isPanning = false
         lastPinchDist = 0f
+        invalidate()
     }
 
     private fun trySnapGroup() {
