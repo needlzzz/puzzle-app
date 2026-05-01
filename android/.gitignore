@@ -37,3 +37,7 @@ captures/
 
 # Google Services (if ever added)
 google-services.json
+
+# Log files
+*.log
+logcat.txt
