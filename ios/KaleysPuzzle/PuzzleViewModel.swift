@@ -131,10 +131,10 @@ final class PuzzleViewModel: ObservableObject {
         trayNeedsUpdate.toggle()
     }
 
-    /// Get unplaced pieces for the tray (sorted by id for consistent ordering)
+    /// Get unplaced pieces for the tray (shuffled for added challenge)
     func getUnplacedPieces() -> [PuzzleEngine.Piece] {
         guard let state = gameState else { return [] }
-        return state.pieces.filter { !$0.placed }
+        return state.pieces.filter { !$0.placed }.shuffled()
     }
 
     func trySnapGroup(_ group: PuzzleEngine.Group) {
