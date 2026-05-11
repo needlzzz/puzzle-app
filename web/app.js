@@ -68,7 +68,7 @@
       return;
     }
     const tabH = len * TAB_SIZE * dir;
-    const neck = len * 0.35;
+    const neck = len * 0.5;
     const neckW = len * 0.1;
     const tabW = len * 0.14;
 
@@ -297,7 +297,7 @@
     ctx.translate(-camera.x, -camera.y);
 
     // Puzzle outline (always visible)
-    ctx.strokeStyle = 'rgba(255, 248, 231, 0.6)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.lineWidth = 2 / camera.zoom;
     ctx.setLineDash([8 / camera.zoom, 6 / camera.zoom]);
     ctx.strokeRect(puzzleX, puzzleY, cols * pieceW, rows * pieceH);
@@ -305,13 +305,13 @@
 
     // Hint image
     if (showHint) {
-      ctx.globalAlpha = 0.18;
+      ctx.globalAlpha = 0.30;
       ctx.drawImage(puzzleImage, puzzleX, puzzleY, cols * pieceW, rows * pieceH);
       ctx.globalAlpha = 1;
     }
 
     // Grid lines
-    ctx.strokeStyle = 'rgba(255, 248, 231, 0.15)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.lineWidth = 1 / camera.zoom;
     for (let c = 1; c < cols; c++) {
       ctx.beginPath();

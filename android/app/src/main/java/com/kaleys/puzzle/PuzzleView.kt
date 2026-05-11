@@ -34,14 +34,14 @@ class PuzzleView @JvmOverloads constructor(
     // Paints
     private val outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        color = Color.argb(153, 255, 248, 231)
+        color = Color.argb(153, 255, 255, 255)
     }
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        color = Color.argb(38, 255, 248, 231)
+        color = Color.argb(38, 255, 255, 255)
     }
     private val hintPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        alpha = 46 // ~0.18
+        alpha = 77 // 0.30
     }
     private val piecePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val pieceStrokePlaced = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -132,7 +132,7 @@ class PuzzleView @JvmOverloads constructor(
             return
         }
         val tabH = len * TAB_SIZE * dir
-        val neck = len * 0.35f
+        val neck = len * 0.5f
         val neckW = len * 0.1f
         val tabW = len * 0.14f
 
