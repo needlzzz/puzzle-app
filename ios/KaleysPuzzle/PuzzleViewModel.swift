@@ -20,6 +20,7 @@ final class PuzzleViewModel: ObservableObject {
     @Published var timerString: String = "⏱ 00:00"
     @Published var isLoading: Bool = false
     @Published var puzzleImage: UIImage?
+    @Published var trayNeedsUpdate: Bool = false
 
     // MARK: - Game Configuration
 
@@ -36,11 +37,16 @@ final class PuzzleViewModel: ObservableObject {
     var edges: PuzzleEngine.Edges?
     var gameActive: Bool = false
 
-    // MARK: - Camera
+    // MARK: - Camera (for the puzzle board area only)
 
     var cameraX: CGFloat = 0
     var cameraY: CGFloat = 0
     var cameraZoom: CGFloat = 1
+
+    // MARK: - Layout info
+
+    var boardHeight: CGFloat = 0
+    var boardWidth: CGFloat = 0
 
     // MARK: - Timer
 
@@ -72,10 +78,17 @@ final class PuzzleViewModel: ObservableObject {
         startTimer()
     }
 
+    /// Initialize the puzzle layout sized to fit within the board area.
+    /// The board area is the top 3/4 of the canvas.
     func initLayout(canvasW: CGFloat, canvasH: CGFloat) {
+        let isReinit = gameState != nil
+        boardWidth = canvasW
+        boardHeight = canvasH
+
         let imageAspect = CGFloat(PuzzleEngine.imageW) / CGFloat(PuzzleEngine.imageH)
-        let maxPuzzleW = canvasW * 0.5
-        let maxPuzzleH = canvasH * 0.5
+        // Use almost the full board area (95% width, 90% height) — leave slight edge visible
+        let maxPuzzleW = canvasW * 0.95
+        let maxPuzzleH = canvasH * 0.90
 
         let puzzleTotalW: CGFloat
         let puzzleTotalH: CGFloat
@@ -86,6 +99,7 @@ final class PuzzleViewModel: ObservableObject {
             puzzleTotalW = maxPuzzleW
             puzzleTotalH = maxPuzzleW / imageAspect
         }
+
         pieceW = puzzleTotalW / CGFloat(cols)
         pieceH = puzzleTotalH / CGFloat(rows)
         puzzleX = (canvasW / 2) - (CGFloat(cols) * pieceW / 2)
@@ -95,45 +109,85 @@ final class PuzzleViewModel: ObservableObject {
         cameraY = canvasH / 2
         cameraZoom = 1
 
-        edges = PuzzleEngine.generateEdges(rows: rows, cols: cols)
-        gameState = PuzzleEngine.createGameState(cols: cols, rows: rows,
-                                                 pieceW: pieceW, pieceH: pieceH,
-                                                 puzzleX: puzzleX, puzzleY: puzzleY)
+        if isReinit {
+            // Recalculate piece positions proportionally
+            guard let state = gameState else { return }
+            for piece in state.pieces {
+                // Update correct positions
+                let newCorrectX = puzzleX + CGFloat(piece.col) * pieceW
+                let newCorrectY = puzzleY + CGFloat(piece.row) * pieceH
 
-        // Scatter pieces around the puzzle area
-        let margin = max(pieceW, pieceH) * 1.5
-        gameState?.pieces.forEach { piece in
-            let side = Int.random(in: 0...3)
-            switch side {
-            case 0:
-                piece.x = puzzleX - margin - CGFloat.random(in: 0...(margin * 2))
-                piece.y = puzzleY + CGFloat.random(in: 0...(CGFloat(rows) * pieceH))
-            case 1:
-                piece.x = puzzleX + CGFloat(cols) * pieceW + margin + CGFloat.random(in: 0...(margin * 2))
-                piece.y = puzzleY + CGFloat.random(in: 0...(CGFloat(rows) * pieceH))
-            case 2:
-                piece.x = puzzleX + CGFloat.random(in: 0...(CGFloat(cols) * pieceW))
-                piece.y = puzzleY - margin - CGFloat.random(in: 0...(margin * 2))
-            default:
-                piece.x = puzzleX + CGFloat.random(in: 0...(CGFloat(cols) * pieceW))
-                piece.y = puzzleY + CGFloat(rows) * pieceH + margin + CGFloat.random(in: 0...(margin * 2))
+                if piece.placed {
+                    piece.x = newCorrectX
+                    piece.y = newCorrectY
+                }
+                // Update the stored correct positions via a workaround
+                // (correctX/correctY are let constants, so we need to recreate)
             }
+            // Since correctX/correctY are immutable, recreate game state
+            let placedIds = Set(state.pieces.filter { $0.placed }.map { $0.id })
+            let groupData = state.groups.map { (id: $0.id, pieceIds: $0.pieces.map { $0.id }, placed: $0.placed) }
+
+            edges = edges ?? PuzzleEngine.generateEdges(rows: rows, cols: cols)
+            gameState = PuzzleEngine.createGameState(cols: cols, rows: rows,
+                                                     pieceW: pieceW, pieceH: pieceH,
+                                                     puzzleX: puzzleX, puzzleY: puzzleY)
+            guard let newState = gameState else { return }
+
+            // Restore placed state
+            for piece in newState.pieces {
+                if placedIds.contains(piece.id) {
+                    piece.placed = true
+                    piece.x = piece.correctX
+                    piece.y = piece.correctY
+                }
+            }
+
+            // Restore groups
+            newState.groups.removeAll()
+            for gd in groupData {
+                let groupPieces = gd.pieceIds.compactMap { newState.piecesById[$0] }
+                let group = PuzzleEngine.Group(id: gd.id, pieces: groupPieces)
+                group.placed = gd.placed
+                for p in groupPieces {
+                    p.groupId = gd.id
+                }
+                newState.groups.append(group)
+            }
+        } else {
+            edges = PuzzleEngine.generateEdges(rows: rows, cols: cols)
+            gameState = PuzzleEngine.createGameState(cols: cols, rows: rows,
+                                                     pieceW: pieceW, pieceH: pieceH,
+                                                     puzzleX: puzzleX, puzzleY: puzzleY)
         }
+
+        trayNeedsUpdate.toggle()
+    }
+
+    /// Get unplaced pieces for the tray (sorted by id for consistent ordering)
+    func getUnplacedPieces() -> [PuzzleEngine.Piece] {
+        guard let state = gameState else { return [] }
+        return state.pieces.filter { !$0.placed }
     }
 
     func trySnapGroup(_ group: PuzzleEngine.Group) {
         guard var groups = gameState?.groups,
               let piecesById = gameState?.piecesById else { return }
 
+        // Use a snap distance proportional to piece size for better UX
+        let snapDist = max(PuzzleEngine.snapDistance, min(pieceW, pieceH) * 0.5)
+
         let result = PuzzleEngine.trySnap(movedGroup: group,
                                           cols: cols, rows: rows,
                                           pieceW: pieceW, pieceH: pieceH,
                                           piecesById: piecesById,
-                                          groups: &groups)
+                                          groups: &groups,
+                                          snapDistance: snapDist)
         gameState?.groups = groups
 
         if result.placedCount > 0 {
             placedPieces += result.placedCount
+            trayNeedsUpdate.toggle() // trigger tray refresh
             if placedPieces >= totalPieces {
                 gameActive = false
                 stopTimer()

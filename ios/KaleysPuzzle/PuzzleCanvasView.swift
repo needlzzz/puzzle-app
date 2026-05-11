@@ -1,37 +1,23 @@
 import SwiftUI
 import UIKit
 
-/// UIViewRepresentable wrapper for the Core Graphics puzzle canvas.
-struct PuzzleCanvasView: UIViewRepresentable {
-    @ObservedObject var viewModel: PuzzleViewModel
-
-    func makeUIView(context: Context) -> PuzzleCanvasUIView {
-        let view = PuzzleCanvasUIView()
-        view.viewModel = viewModel
-        view.backgroundColor = UIColor(hex: 0x7A5E22)
-        view.isMultipleTouchEnabled = true
-        return view
-    }
-
-    func updateUIView(_ uiView: PuzzleCanvasUIView, context: Context) {
-        uiView.viewModel = viewModel
-        uiView.setNeedsDisplay()
-    }
-}
-
-/// Custom UIView that renders the jigsaw puzzle and handles touch input.
-class PuzzleCanvasUIView: UIView {
+/// Custom UIView for the puzzle board — renders the grid, placed pieces, and handles pan/zoom.
+class PuzzleBoardUIView: UIView {
 
     private let tabSize: CGFloat = 0.2
     private let minZoom: CGFloat = 0.3
     private let maxZoom: CGFloat = 5.0
 
     var viewModel: PuzzleViewModel? {
-        didSet { buildPiecePaths() }
+        didSet {
+            if viewModel?.edges != nil {
+                buildPiecePaths()
+            }
+        }
     }
 
     // Cached piece paths
-    private var piecePaths: [Int: CGPath] = [:]
+    var piecePaths: [Int: CGPath] = [:]
 
     // Interaction state
     private var dragGroup: PuzzleEngine.Group?
@@ -41,8 +27,10 @@ class PuzzleCanvasUIView: UIView {
     private var isDragging = false
     private var isPanning = false
     private var lastPanPoint: CGPoint = .zero
-    private var lastPinchDist: CGFloat = 0
-    private var lastPinchCenter: CGPoint = .zero
+
+    // Piece being dragged from tray
+    var externalDragPiece: PuzzleEngine.Piece?
+    var externalDragGroup: PuzzleEngine.Group?
 
     // Display link for smooth rendering during drag
     private var displayLink: CADisplayLink?
@@ -60,7 +48,6 @@ class PuzzleCanvasUIView: UIView {
 
     private func setup() {
         contentMode = .redraw
-        // Add pinch gesture
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
         addGestureRecognizer(pinch)
     }
@@ -68,7 +55,27 @@ class PuzzleCanvasUIView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         guard let vm = viewModel else { return }
-        if vm.gameState == nil && vm.gameActive {
+        guard bounds.width > 0, bounds.height > 0 else { return }
+
+        if vm.gameState == nil && vm.gameActive && vm.cols > 0 && vm.rows > 0 {
+            // First initialization
+            vm.initLayout(canvasW: bounds.width, canvasH: bounds.height)
+            buildPiecePaths()
+            setNeedsDisplay()
+        } else if vm.gameState != nil && vm.gameActive {
+            // Check if size changed (rotation) — reinitialize layout
+            if abs(vm.boardWidth - bounds.width) > 1 || abs(vm.boardHeight - bounds.height) > 1 {
+                vm.initLayout(canvasW: bounds.width, canvasH: bounds.height)
+                buildPiecePaths()
+                setNeedsDisplay()
+            }
+        }
+    }
+
+    func initializeIfNeeded() {
+        guard let vm = viewModel else { return }
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        if vm.gameState == nil && vm.gameActive && vm.cols > 0 && vm.rows > 0 {
             vm.initLayout(canvasW: bounds.width, canvasH: bounds.height)
             buildPiecePaths()
             setNeedsDisplay()
@@ -96,22 +103,34 @@ class PuzzleCanvasUIView: UIView {
         path.move(to: .zero)
 
         // Top edge
-        let topDir = row == 0 ? 0 : -edges.h[row - 1][col]
+        let topDir: Int
+        if row == 0 { topDir = 0 }
+        else if row - 1 < edges.h.count && col < edges.h[row - 1].count { topDir = -edges.h[row - 1][col] }
+        else { topDir = 0 }
         drawJigsawEdge(path: path, len: w, dir: topDir,
                        tx: { x, _ in x }, ty: { _, y in y })
 
         // Right edge
-        let rightDir = col == vm.cols - 1 ? 0 : edges.v[row][col]
+        let rightDir: Int
+        if col == vm.cols - 1 { rightDir = 0 }
+        else if row < edges.v.count && col < edges.v[row].count { rightDir = edges.v[row][col] }
+        else { rightDir = 0 }
         drawJigsawEdge(path: path, len: h, dir: rightDir,
                        tx: { x, y in w + y }, ty: { x, _ in x })
 
         // Bottom edge
-        let bottomDir = row == vm.rows - 1 ? 0 : edges.h[row][col]
+        let bottomDir: Int
+        if row == vm.rows - 1 { bottomDir = 0 }
+        else if row < edges.h.count && col < edges.h[row].count { bottomDir = edges.h[row][col] }
+        else { bottomDir = 0 }
         drawJigsawEdge(path: path, len: w, dir: bottomDir,
                        tx: { x, _ in w - x }, ty: { _, y in h - y })
 
         // Left edge
-        let leftDir = col == 0 ? 0 : -edges.v[row][col - 1]
+        let leftDir: Int
+        if col == 0 { leftDir = 0 }
+        else if row < edges.v.count && col - 1 < edges.v[row].count { leftDir = -edges.v[row][col - 1] }
+        else { leftDir = 0 }
         drawJigsawEdge(path: path, len: h, dir: leftDir,
                        tx: { _, y in -y }, ty: { x, _ in h - x })
 
@@ -152,7 +171,7 @@ class PuzzleCanvasUIView: UIView {
 
     // MARK: - Coordinate Transforms
 
-    private func screenToWorld(_ point: CGPoint) -> CGPoint {
+    func screenToWorld(_ point: CGPoint) -> CGPoint {
         guard let vm = viewModel else { return point }
         return PuzzleEngine.screenToWorld(sx: point.x, sy: point.y,
                                           cameraX: vm.cameraX, cameraY: vm.cameraY,
@@ -167,7 +186,8 @@ class PuzzleCanvasUIView: UIView {
               let vm = viewModel,
               vm.gameActive || vm.screen == .win,
               let state = vm.gameState,
-              let image = vm.puzzleImage?.cgImage else { return }
+              let image = vm.puzzleImage?.cgImage,
+              vm.cols > 0, vm.rows > 0, vm.pieceW > 0, vm.pieceH > 0 else { return }
 
         let canvasW = bounds.width
         let canvasH = bounds.height
@@ -195,7 +215,6 @@ class PuzzleCanvasUIView: UIView {
         if vm.showHint {
             ctx.saveGState()
             ctx.setAlpha(0.18)
-            // Core Graphics draws images flipped, so we need to flip
             ctx.saveGState()
             ctx.translateBy(x: vm.puzzleX, y: vm.puzzleY + totalH)
             ctx.scaleBy(x: 1, y: -1)
@@ -207,21 +226,26 @@ class PuzzleCanvasUIView: UIView {
         // Grid lines
         ctx.setStrokeColor(UIColor(white: 1, alpha: 0.15).cgColor)
         ctx.setLineWidth(1 / vm.cameraZoom)
-        for c in 1..<vm.cols {
-            let x = vm.puzzleX + CGFloat(c) * vm.pieceW
-            ctx.move(to: CGPoint(x: x, y: vm.puzzleY))
-            ctx.addLine(to: CGPoint(x: x, y: vm.puzzleY + totalH))
-            ctx.strokePath()
+        if vm.cols > 1 {
+            for c in 1..<vm.cols {
+                let x = vm.puzzleX + CGFloat(c) * vm.pieceW
+                ctx.move(to: CGPoint(x: x, y: vm.puzzleY))
+                ctx.addLine(to: CGPoint(x: x, y: vm.puzzleY + totalH))
+                ctx.strokePath()
+            }
         }
-        for r in 1..<vm.rows {
-            let y = vm.puzzleY + CGFloat(r) * vm.pieceH
-            ctx.move(to: CGPoint(x: vm.puzzleX, y: y))
-            ctx.addLine(to: CGPoint(x: vm.puzzleX + totalW, y: y))
-            ctx.strokePath()
+        if vm.rows > 1 {
+            for r in 1..<vm.rows {
+                let y = vm.puzzleY + CGFloat(r) * vm.pieceH
+                ctx.move(to: CGPoint(x: vm.puzzleX, y: y))
+                ctx.addLine(to: CGPoint(x: vm.puzzleX + totalW, y: y))
+                ctx.strokePath()
+            }
         }
 
-        // Sort: placed below, unplaced above
-        let sorted = state.pieces.sorted { a, b in
+        // Draw placed pieces only (pieces being dragged from tray are shown via floating image)
+        let piecesToDraw = state.pieces.filter { $0.placed }
+        let sorted = piecesToDraw.sorted { a, b in
             if a.placed && !b.placed { return true }
             if !a.placed && b.placed { return false }
             return false
@@ -232,6 +256,16 @@ class PuzzleCanvasUIView: UIView {
         }
 
         ctx.restoreGState()
+    }
+
+    private func isBeingDragged(_ piece: PuzzleEngine.Piece) -> Bool {
+        if let group = dragGroup {
+            return group.pieces.contains(where: { $0.id == piece.id })
+        }
+        if let group = externalDragGroup {
+            return group.pieces.contains(where: { $0.id == piece.id })
+        }
+        return false
     }
 
     private func drawPiece(ctx: CGContext, piece: PuzzleEngine.Piece,
@@ -247,7 +281,6 @@ class PuzzleCanvasUIView: UIView {
         ctx.addPath(path)
         ctx.clip()
 
-        // Draw image (flipped for Core Graphics coordinate system)
         ctx.saveGState()
         let dstRect = CGRect(x: -CGFloat(piece.col) * vm.pieceW,
                              y: -CGFloat(piece.row) * vm.pieceH,
@@ -259,21 +292,17 @@ class PuzzleCanvasUIView: UIView {
 
         ctx.restoreGState()
 
-        // Stroke
-        ctx.addPath(path)
-        if piece.placed {
-            ctx.setStrokeColor(UIColor(white: 1, alpha: 0.3).cgColor)
-            ctx.setLineWidth(0.5)
-        } else {
-            // Shadow stroke
+        // Stroke — only for unplaced pieces
+        if !piece.placed {
+            ctx.addPath(path)
             ctx.setStrokeColor(UIColor(white: 0, alpha: 0.15).cgColor)
             ctx.setLineWidth(3)
             ctx.strokePath()
             ctx.addPath(path)
             ctx.setStrokeColor(UIColor(white: 0, alpha: 0.5).cgColor)
             ctx.setLineWidth(1.2)
+            ctx.strokePath()
         }
-        ctx.strokePath()
 
         ctx.restoreGState()
     }
@@ -282,58 +311,28 @@ class PuzzleCanvasUIView: UIView {
 
     private func hitTestPiece(worldPoint: CGPoint) -> PuzzleEngine.Piece? {
         guard let state = viewModel?.gameState else { return nil }
+        // Only hit-test pieces that are on the board (placed or being dragged)
         for piece in state.pieces.reversed() {
-            if piece.placed { continue }
-            guard let path = piecePaths[piece.id] else { continue }
-            let localPoint = CGPoint(x: worldPoint.x - piece.x, y: worldPoint.y - piece.y)
-            if path.contains(localPoint) {
-                return piece
-            }
+            if !piece.placed { continue }
+            // Don't allow picking up placed pieces
         }
         return nil
     }
 
-    // MARK: - Touch Handling
+    // MARK: - Touch Handling (pan/zoom only on board, dragging handled externally)
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let vm = viewModel, vm.gameActive else { return }
         guard let touch = touches.first else { return }
 
-        let point = touch.location(in: self)
-
-        // Check for multi-touch (pinch handled by gesture recognizer)
         if let allTouches = event?.allTouches, allTouches.count >= 2 {
-            isDragging = false
-            dragGroup = nil
             isPanning = true
             return
         }
 
-        let worldPoint = screenToWorld(point)
-        let piece = hitTestPiece(worldPoint: worldPoint)
-
-        if let piece = piece {
-            isDragging = true
-            let group = viewModel?.gameState?.groups.first { $0.id == piece.groupId }
-            dragGroup = group
-            dragPiece = piece
-            dragOffsetX = worldPoint.x - piece.x
-            dragOffsetY = worldPoint.y - piece.y
-
-            // Bring group to top
-            if let group = group, let state = vm.gameState {
-                let groupIds = Set(group.pieces.map { $0.id })
-                let others = state.pieces.filter { !groupIds.contains($0.id) }
-                let groupPieces = state.pieces.filter { groupIds.contains($0.id) }
-                state.pieces.removeAll()
-                state.pieces.append(contentsOf: others)
-                state.pieces.append(contentsOf: groupPieces)
-            }
-            startDisplayLink()
-        } else {
-            isPanning = true
-            lastPanPoint = point
-        }
+        let point = touch.location(in: self)
+        isPanning = true
+        lastPanPoint = point
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -341,16 +340,7 @@ class PuzzleCanvasUIView: UIView {
         guard let touch = touches.first else { return }
         let point = touch.location(in: self)
 
-        if isDragging, let group = dragGroup, let piece = dragPiece {
-            let worldPoint = screenToWorld(point)
-            let dx = (worldPoint.x - dragOffsetX) - piece.x
-            let dy = (worldPoint.y - dragOffsetY) - piece.y
-            for p in group.pieces {
-                p.x += dx
-                p.y += dy
-            }
-            needsRender = true
-        } else if isPanning {
+        if isPanning && externalDragPiece == nil {
             let dx = (point.x - lastPanPoint.x) / vm.cameraZoom
             let dy = (point.y - lastPanPoint.y) / vm.cameraZoom
             vm.cameraX -= dx
@@ -361,23 +351,52 @@ class PuzzleCanvasUIView: UIView {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if isDragging, let group = dragGroup, !group.placed {
-            viewModel?.trySnapGroup(group)
-        }
-        cleanup()
+        isPanning = false
+        setNeedsDisplay()
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        cleanup()
+        isPanning = false
+        setNeedsDisplay()
     }
 
-    private func cleanup() {
-        isDragging = false
-        dragGroup = nil
-        dragPiece = nil
-        isPanning = false
-        stopDisplayLink()
+    // MARK: - External drag (from tray)
+
+    func dropPiece(group: PuzzleEngine.Group, at screenPoint: CGPoint) {
+        guard let vm = viewModel else { return }
+        let worldPoint = screenToWorld(screenPoint)
+        // Position the piece centered at the drop point (offset by half piece size)
+        let piece = group.pieces[0]
+        let targetX = worldPoint.x - vm.pieceW / 2
+        let targetY = worldPoint.y - vm.pieceH / 2
+        let dx = targetX - piece.x
+        let dy = targetY - piece.y
+        for p in group.pieces {
+            p.x += dx
+            p.y += dy
+        }
+        // Try to snap
+        vm.trySnapGroup(group)
+        externalDragPiece = nil
+        externalDragGroup = nil
         setNeedsDisplay()
+    }
+
+    func updateExternalDrag(group: PuzzleEngine.Group, at screenPoint: CGPoint) {
+        guard let vm = viewModel else { return }
+        externalDragGroup = group
+        externalDragPiece = group.pieces.first
+        let worldPoint = screenToWorld(screenPoint)
+        let piece = group.pieces[0]
+        let targetX = worldPoint.x - vm.pieceW / 2
+        let targetY = worldPoint.y - vm.pieceH / 2
+        let dx = targetX - piece.x
+        let dy = targetY - piece.y
+        for p in group.pieces {
+            p.x += dx
+            p.y += dy
+        }
+        // Don't redraw — the floating image view handles the visual during drag
     }
 
     // MARK: - Pinch Gesture
@@ -404,13 +423,13 @@ class PuzzleCanvasUIView: UIView {
 
     // MARK: - Display Link
 
-    private func startDisplayLink() {
+    func startDisplayLink() {
         guard displayLink == nil else { return }
         displayLink = CADisplayLink(target: self, selector: #selector(displayLinkFired))
         displayLink?.add(to: .main, forMode: .common)
     }
 
-    private func stopDisplayLink() {
+    func stopDisplayLink() {
         displayLink?.invalidate()
         displayLink = nil
         needsRender = false
@@ -421,5 +440,9 @@ class PuzzleCanvasUIView: UIView {
             needsRender = false
             setNeedsDisplay()
         }
+    }
+
+    func requestRender() {
+        needsRender = true
     }
 }

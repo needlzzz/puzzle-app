@@ -169,7 +169,9 @@ enum PuzzleEngine {
                         piecesById: [Int: Piece],
                         groups: inout [Group],
                         snapDistance: CGFloat = PuzzleEngine.snapDistance) -> SnapResult {
-        for piece in movedGroup.pieces {
+        // Copy pieces array to avoid mutation during iteration
+        let piecesToCheck = Array(movedGroup.pieces)
+        for piece in piecesToCheck {
             // Check snap to correct position
             let dx = piece.x - piece.correctX
             let dy = piece.y - piece.correctY

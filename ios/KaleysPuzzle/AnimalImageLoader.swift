@@ -22,34 +22,61 @@ enum AnimalImageLoader {
         "wolf", "bear", "deer", "horse", "rabbit", "owl", "dolphin", "penguin"
     ]
 
-    /// Try loading from network sources, fall back to procedural generation.
+    /// Try loading from bundled images first (instant), then network sources.
     static func loadImage() async -> UIImage {
+        // Source 1: Bundled animal images (instant, no network needed)
+        if let img = loadBundledImage() {
+            return img
+        }
+
         let w = PuzzleEngine.imageW
         let h = PuzzleEngine.imageH
 
-        // Source 1: Unsplash
+        // Source 2: Unsplash
         let unsplashId = unsplashAnimalIDs.randomElement()!
         let unsplashURL = "https://images.unsplash.com/photo-\(unsplashId)?w=\(w)&h=\(h)&fit=crop&auto=format&q=70"
-        if let img = await tryLoadImage(from: unsplashURL, timeout: 5) {
+        if let img = await tryLoadImage(from: unsplashURL, timeout: 3) {
             return img
         }
 
-        // Source 2: Lorem Flickr
+        // Source 3: Lorem Flickr
         let keyword = animalKeywords.randomElement()!
         let flickrURL = "https://loremflickr.com/\(w)/\(h)/\(keyword)"
-        if let img = await tryLoadImage(from: flickrURL, timeout: 5) {
+        if let img = await tryLoadImage(from: flickrURL, timeout: 3) {
             return img
         }
 
-        // Source 3: Picsum
+        // Source 4: Picsum
         let picsumId = Int.random(in: 10...209)
         let picsumURL = "https://picsum.photos/id/\(picsumId)/\(w)/\(h)"
-        if let img = await tryLoadImage(from: picsumURL, timeout: 5) {
+        if let img = await tryLoadImage(from: picsumURL, timeout: 3) {
             return img
         }
 
         // Last resort: procedural fallback
         return generateProceduralImage()
+    }
+
+    // MARK: - Bundled Images
+
+    private static let bundledImageCount = 10
+
+    /// Load a random bundled animal image from the asset catalog.
+    /// Tries random indices until it finds one that exists, or gives up.
+    static func loadBundledImage() -> UIImage? {
+        var indices = Array(1...bundledImageCount)
+        indices.shuffle()
+        for index in indices {
+            // Try with namespace prefix
+            if let img = UIImage(named: "Animals/animal_\(index)") {
+                return img
+            }
+            // Try without namespace prefix
+            if let img = UIImage(named: "animal_\(index)") {
+                return img
+            }
+        }
+        return nil
     }
 
     private static func tryLoadImage(from urlString: String, timeout: TimeInterval) async -> UIImage? {

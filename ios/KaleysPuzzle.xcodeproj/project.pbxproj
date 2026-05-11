@@ -15,6 +15,7 @@
 		A1000006 /* AnimalImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000006 /* AnimalImageLoader.swift */; };
 		A1000007 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000007 /* ConfettiView.swift */; };
 		A1000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000008 /* Assets.xcassets */; };
+		A1000009 /* PieceTrayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000009 /* PieceTrayView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		A2000006 /* AnimalImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimalImageLoader.swift; sourceTree = "<group>"; };
 		A2000007 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		A2000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A2000009 /* PieceTrayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PieceTrayView.swift; sourceTree = "<group>"; };
 		A3000001 /* KaleysPuzzle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaleysPuzzle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -56,6 +58,7 @@
 				A2000003 /* PuzzleEngine.swift */,
 				A2000004 /* PuzzleViewModel.swift */,
 				A2000005 /* PuzzleCanvasView.swift */,
+				A2000009 /* PieceTrayView.swift */,
 				A2000006 /* AnimalImageLoader.swift */,
 				A2000007 /* ConfettiView.swift */,
 				A2000008 /* Assets.xcassets */,
@@ -145,6 +148,7 @@
 				A1000003 /* PuzzleEngine.swift in Sources */,
 				A1000004 /* PuzzleViewModel.swift in Sources */,
 				A1000005 /* PuzzleCanvasView.swift in Sources */,
+				A1000009 /* PieceTrayView.swift in Sources */,
 				A1000006 /* AnimalImageLoader.swift in Sources */,
 				A1000007 /* ConfettiView.swift in Sources */,
 			);
@@ -277,7 +281,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = SQ3S9R8VD4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Kaley's Puzzle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -291,7 +295,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.kaleys.puzzle";
+				PRODUCT_BUNDLE_IDENTIFIER = com.kaleys.puzzle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -308,7 +312,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = SQ3S9R8VD4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Kaley's Puzzle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -322,7 +326,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.kaleys.puzzle";
+				PRODUCT_BUNDLE_IDENTIFIER = com.kaleys.puzzle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -354,7 +358,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = A9000001 /* Project object */;
 }

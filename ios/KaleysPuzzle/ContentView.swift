@@ -119,41 +119,95 @@ struct DifficultyButton: View {
 
 struct GameScreenView: View {
     @ObservedObject var viewModel: PuzzleViewModel
+    @State private var boardView: PuzzleBoardUIView?
 
     var body: some View {
-        ZStack {
-            PuzzleCanvasView(viewModel: viewModel)
-                .ignoresSafeArea()
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                // Puzzle board area (3/4 of screen)
+                ZStack {
+                    PuzzleBoardRepresentable(viewModel: viewModel, boardViewBinding: $boardView)
 
-            // UI Bar
-            VStack {
-                HStack(spacing: 16) {
-                    Text(viewModel.timerString)
-                        .font(.system(size: 14, design: .monospaced))
-                        .foregroundColor(Color(hex: 0xFFF8E7))
+                    // UI Bar overlay
+                    VStack {
+                        HStack(spacing: 16) {
+                            Text(viewModel.timerString)
+                                .font(.system(size: 14, design: .monospaced))
+                                .foregroundColor(Color(hex: 0xFFF8E7))
 
-                    Text("\(viewModel.placedPieces) / \(viewModel.totalPieces)")
-                        .font(.system(size: 14, design: .monospaced))
-                        .foregroundColor(Color(hex: 0xFFF8E7))
+                            Text("\(viewModel.placedPieces) / \(viewModel.totalPieces)")
+                                .font(.system(size: 14, design: .monospaced))
+                                .foregroundColor(Color(hex: 0xFFF8E7))
 
-                    BarButton(label: "🖼 Hint", isActive: viewModel.showHint) {
-                        viewModel.showHint.toggle()
-                    }
+                            BarButton(label: "🖼 Hint", isActive: viewModel.showHint) {
+                                viewModel.showHint.toggle()
+                            }
 
-                    BarButton(label: "🔄 New", isActive: false) {
-                        viewModel.resetToStart()
+                            BarButton(label: "🔄 New", isActive: false) {
+                                viewModel.resetToStart()
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial.opacity(0.8))
+                        .background(Color.black.opacity(0.55))
+                        .clipShape(Capsule())
+                        .padding(.top, 8)
+
+                        Spacer()
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .background(.ultraThinMaterial.opacity(0.8))
-                .background(Color.black.opacity(0.55))
-                .clipShape(Capsule())
-                .padding(.top, 12)
+                .frame(height: geo.size.height * 0.75)
 
-                Spacer()
+                // Piece tray (bottom 1/4)
+                PieceTrayRepresentable(viewModel: viewModel, boardView: boardView)
+                    .frame(height: geo.size.height * 0.25)
             }
         }
+        .ignoresSafeArea(.keyboard)
+    }
+}
+
+/// Wrapper that exposes the underlying PuzzleBoardUIView reference
+struct PuzzleBoardRepresentable: UIViewRepresentable {
+    @ObservedObject var viewModel: PuzzleViewModel
+    @Binding var boardViewBinding: PuzzleBoardUIView?
+
+    func makeUIView(context: Context) -> PuzzleBoardUIView {
+        let view = PuzzleBoardUIView()
+        view.viewModel = viewModel
+        view.backgroundColor = UIColor(hex: 0x7A5E22)
+        view.isMultipleTouchEnabled = true
+        DispatchQueue.main.async {
+            boardViewBinding = view
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: PuzzleBoardUIView, context: Context) {
+        uiView.viewModel = viewModel
+        uiView.initializeIfNeeded()
+        uiView.setNeedsDisplay()
+    }
+}
+
+/// Wrapper for the piece tray
+struct PieceTrayRepresentable: UIViewRepresentable {
+    @ObservedObject var viewModel: PuzzleViewModel
+    var boardView: PuzzleBoardUIView?
+
+    func makeUIView(context: Context) -> PieceTrayUIView {
+        let view = PieceTrayUIView()
+        view.viewModel = viewModel
+        view.boardView = boardView
+        view.backgroundColor = UIColor(hex: 0x5A4418)
+        return view
+    }
+
+    func updateUIView(_ uiView: PieceTrayUIView, context: Context) {
+        uiView.viewModel = viewModel
+        uiView.boardView = boardView
+        uiView.refreshPieces()
     }
 }
 
