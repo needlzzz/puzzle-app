@@ -90,7 +90,7 @@ class PieceTrayUIView: UIView, UIGestureRecognizerDelegate {
 
         // Add a long press gesture on the scroll view to pick up pieces
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handlePieceDrag(_:)))
-        longPress.minimumPressDuration = 0.09
+        longPress.minimumPressDuration = 0.05
         longPress.delegate = self
         scrollView.addGestureRecognizer(longPress)
 
