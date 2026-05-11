@@ -88,9 +88,10 @@ final class PuzzleViewModel: ObservableObject {
         boardHeight = canvasH
 
         let imageAspect = CGFloat(PuzzleEngine.imageW) / CGFloat(PuzzleEngine.imageH)
-        // Use almost the full board area (95% width, 90% height) — leave slight edge visible
-        let maxPuzzleW = canvasW * 0.95
-        let maxPuzzleH = canvasH * 0.90
+        // In landscape, use more horizontal space; in portrait, current values are fine
+        let isLandscape = canvasW > canvasH
+        let maxPuzzleW = canvasW * (isLandscape ? 0.98 : 0.95)
+        let maxPuzzleH = canvasH * (isLandscape ? 0.88 : 0.90)
 
         let puzzleTotalW: CGFloat
         let puzzleTotalH: CGFloat

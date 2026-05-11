@@ -232,21 +232,13 @@ class PuzzleBoardUIView: UIView {
             }
         }
 
-        // Draw pieces: placed first (sorted row-major so tabs layer correctly),
-        // then the piece currently being dragged on top.
+        // Draw pieces: placed first (sorted row-major so tabs layer correctly)
         let placedPiecesToDraw = state.pieces
             .filter { $0.placed }
             .sorted { ($0.row * vm.cols + $0.col) < ($1.row * vm.cols + $1.col) }
 
         for piece in placedPiecesToDraw {
             drawPiece(ctx: ctx, piece: piece, image: image, vm: vm, totalW: totalW, totalH: totalH)
-        }
-
-        // Draw the piece being dragged from tray (on top of placed pieces)
-        if let dragGroup = externalDragGroup {
-            for piece in dragGroup.pieces {
-                drawPiece(ctx: ctx, piece: piece, image: image, vm: vm, totalW: totalW, totalH: totalH)
-            }
         }
 
         ctx.restoreGState()
@@ -283,13 +275,9 @@ class PuzzleBoardUIView: UIView {
 
         ctx.restoreGState()
 
-        // Stroke — thin line on placed for visual alignment
-        ctx.addPath(path)
-        if piece.placed {
-            ctx.setStrokeColor(UIColor(white: 1, alpha: 0.15).cgColor)
-            ctx.setLineWidth(0.3)
-            ctx.strokePath()
-        } else {
+        // Stroke — only on unplaced pieces for visual depth
+        if !piece.placed {
+            ctx.addPath(path)
             ctx.setStrokeColor(UIColor(white: 0, alpha: 0.15).cgColor)
             ctx.setLineWidth(3)
             ctx.strokePath()

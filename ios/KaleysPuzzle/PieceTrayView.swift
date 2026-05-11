@@ -127,50 +127,67 @@ class PieceTrayUIView: UIView, UIGestureRecognizerDelegate {
         let unplaced = vm.getUnplacedPieces()
         guard !unplaced.isEmpty else { return }
 
-        // Calculate thumbnail size to fill the tray height
+        // Calculate thumbnail size to match the board piece size
         let trayHeight = bounds.height
         let trayWidth = bounds.width
         let padding: CGFloat = 8
         let availableHeight = trayHeight - padding * 2
 
-        // Scale pieces to fill the available height (1.4 accounts for tab overflow)
-        let scale = availableHeight / (vm.pieceH * 1.4)
+        // Use 1:1 scale with the board pieces (1.4 accounts for tab overflow)
+        // If pieces are too tall for the tray, scale down to fit
+        let idealThumbH = vm.pieceH * 1.4
+        let scale = min(1.0, availableHeight / idealThumbH)
         let thumbW = vm.pieceW * scale * 1.4
-        let thumbH = availableHeight
+        let thumbH = vm.pieceH * scale * 1.4
 
-        // Calculate spacing: if all pieces fit in the tray width, spread them out
-        let totalPiecesWidth = thumbW * CGFloat(unplaced.count)
+        // Determine number of rows: stack pieces if they're small enough to fit multiple rows
+        let rowCount = max(1, Int(availableHeight / thumbH))
+        let rowHeight = availableHeight / CGFloat(rowCount)
+        let rowScale = min(scale, (rowHeight - 2) / (vm.pieceH * 1.4))
+        let actualThumbW = vm.pieceW * rowScale * 1.4
+        let actualThumbH = vm.pieceH * rowScale * 1.4
+
+        // Calculate spacing
+        let piecesPerRow = Int(ceil(Double(unplaced.count) / Double(rowCount)))
+        let totalPiecesWidth = actualThumbW * CGFloat(piecesPerRow)
         let availableWidth = trayWidth - padding * 2
         let spacing: CGFloat
         if totalPiecesWidth < availableWidth {
-            // Pieces fit — distribute evenly
-            if unplaced.count > 1 {
-                spacing = (availableWidth - totalPiecesWidth) / CGFloat(unplaced.count - 1)
+            if piecesPerRow > 1 {
+                spacing = (availableWidth - totalPiecesWidth) / CGFloat(piecesPerRow - 1)
             } else {
                 spacing = 0
             }
         } else {
-            // Too many pieces — use minimal spacing, will scroll
             spacing = 4
         }
 
         var xOffset: CGFloat = padding
+        var currentRow = 0
+        var countInRow = 0
 
         for piece in unplaced {
-            let pieceView = createPieceThumbnail(piece: piece, image: image, vm: vm, scale: scale, thumbW: thumbW, thumbH: thumbH)
-            pieceView.frame = CGRect(x: xOffset, y: padding, width: thumbW, height: thumbH)
+            let yOffset = padding + CGFloat(currentRow) * rowHeight + (rowHeight - actualThumbH) / 2
+            let pieceView = createPieceThumbnail(piece: piece, image: image, vm: vm, scale: rowScale, thumbW: actualThumbW, thumbH: actualThumbH)
+            pieceView.frame = CGRect(x: xOffset, y: yOffset, width: actualThumbW, height: actualThumbH)
             contentView.addSubview(pieceView)
             pieceViews[piece.id] = pieceView
 
-            // Add pan gesture for dragging (more responsive than long press)
             pieceView.isUserInteractionEnabled = true
             pieceView.tag = piece.id
 
-            xOffset += thumbW + spacing
+            countInRow += 1
+            if countInRow >= piecesPerRow {
+                countInRow = 0
+                currentRow += 1
+                xOffset = padding
+            } else {
+                xOffset += actualThumbW + spacing
+            }
         }
 
         // Update content size
-        let totalWidth = xOffset + padding
+        let totalWidth = padding + CGFloat(piecesPerRow) * (actualThumbW + spacing)
         contentView.frame = CGRect(x: 0, y: 0, width: totalWidth, height: trayHeight)
         scrollView.contentSize = CGSize(width: totalWidth, height: trayHeight)
     }
