@@ -139,7 +139,7 @@ class PuzzleBoardUIView: UIView {
             return
         }
         let tabH = len * tabSize * CGFloat(dir)
-        let neck = len * 0.35
+        let neck = len * 0.5
         let neckW = len * 0.1
         let tabW = len * 0.14
 
@@ -232,12 +232,21 @@ class PuzzleBoardUIView: UIView {
             }
         }
 
-        // Draw placed pieces (draw in row-major order, then reverse so later pieces' tabs
-        // paint over earlier pieces' blanks correctly)
-        let piecesToDraw = state.pieces.filter { $0.placed }
+        // Draw pieces: placed first (sorted row-major so tabs layer correctly),
+        // then the piece currently being dragged on top.
+        let placedPiecesToDraw = state.pieces
+            .filter { $0.placed }
+            .sorted { ($0.row * vm.cols + $0.col) < ($1.row * vm.cols + $1.col) }
 
-        for piece in piecesToDraw {
+        for piece in placedPiecesToDraw {
             drawPiece(ctx: ctx, piece: piece, image: image, vm: vm, totalW: totalW, totalH: totalH)
+        }
+
+        // Draw the piece being dragged from tray (on top of placed pieces)
+        if let dragGroup = externalDragGroup {
+            for piece in dragGroup.pieces {
+                drawPiece(ctx: ctx, piece: piece, image: image, vm: vm, totalW: totalW, totalH: totalH)
+            }
         }
 
         ctx.restoreGState()

@@ -144,13 +144,19 @@ enum PuzzleEngine {
         var piecesById: [Int: Piece] = [:]
         var groups: [Group] = []
 
+        // Place pieces far off-board so they don't auto-snap when dragged onto the board.
+        // The tray view handles displaying unplaced pieces visually.
+        let offBoardX = puzzleX - CGFloat(cols) * pieceW * 3
+        let offBoardY = puzzleY - CGFloat(rows) * pieceH * 3
+
         for r in 0..<rows {
             for c in 0..<cols {
                 let id = r * cols + c
                 let correctX = puzzleX + CGFloat(c) * pieceW
                 let correctY = puzzleY + CGFloat(r) * pieceH
                 let piece = Piece(id: id, col: c, row: r,
-                                  x: correctX, y: correctY,
+                                  x: offBoardX + CGFloat(c) * pieceW,
+                                  y: offBoardY + CGFloat(r) * pieceH,
                                   correctX: correctX, correctY: correctY,
                                   groupId: id)
                 pieces.append(piece)
