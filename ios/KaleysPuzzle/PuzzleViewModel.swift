@@ -163,12 +163,16 @@ final class PuzzleViewModel: ObservableObject {
 
         if result.placedCount > 0 {
             placedPieces += result.placedCount
+            SoundManager.shared.playSnap()
             trayNeedsUpdate.toggle() // trigger tray refresh
             if placedPieces >= totalPieces {
                 gameActive = false
                 stopTimer()
                 screen = .win
+                SoundManager.shared.playWin()
             }
+        } else if !result.snapped {
+            SoundManager.shared.playDrop()
         }
     }
 

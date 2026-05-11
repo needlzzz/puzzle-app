@@ -16,6 +16,11 @@
 		A1000007 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000007 /* ConfettiView.swift */; };
 		A1000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000008 /* Assets.xcassets */; };
 		A1000009 /* PieceTrayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000009 /* PieceTrayView.swift */; };
+		A100000A /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000A /* SoundManager.swift */; };
+		A100000B /* snap.wav in Resources */ = {isa = PBXBuildFile; fileRef = A200000B /* snap.wav */; };
+		A100000C /* pickup.wav in Resources */ = {isa = PBXBuildFile; fileRef = A200000C /* pickup.wav */; };
+		A100000D /* win.wav in Resources */ = {isa = PBXBuildFile; fileRef = A200000D /* win.wav */; };
+		A100000E /* drop.wav in Resources */ = {isa = PBXBuildFile; fileRef = A200000E /* drop.wav */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +33,11 @@
 		A2000007 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		A2000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A2000009 /* PieceTrayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PieceTrayView.swift; sourceTree = "<group>"; };
+		A200000A /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		A200000B /* snap.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = snap.wav; sourceTree = "<group>"; };
+		A200000C /* pickup.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pickup.wav; sourceTree = "<group>"; };
+		A200000D /* win.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = win.wav; sourceTree = "<group>"; };
+		A200000E /* drop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = drop.wav; sourceTree = "<group>"; };
 		A3000001 /* KaleysPuzzle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KaleysPuzzle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -61,6 +71,8 @@
 				A2000009 /* PieceTrayView.swift */,
 				A2000006 /* AnimalImageLoader.swift */,
 				A2000007 /* ConfettiView.swift */,
+				A200000A /* SoundManager.swift */,
+				A5000004 /* Sounds */,
 				A2000008 /* Assets.xcassets */,
 			);
 			path = KaleysPuzzle;
@@ -72,6 +84,17 @@
 				A3000001 /* KaleysPuzzle.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A5000004 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				A200000B /* snap.wav */,
+				A200000C /* pickup.wav */,
+				A200000D /* win.wav */,
+				A200000E /* drop.wav */,
+			);
+			path = Sounds;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -133,6 +156,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000008 /* Assets.xcassets in Resources */,
+				A100000B /* snap.wav in Resources */,
+				A100000C /* pickup.wav in Resources */,
+				A100000D /* win.wav in Resources */,
+				A100000E /* drop.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -151,6 +178,7 @@
 				A1000009 /* PieceTrayView.swift in Sources */,
 				A1000006 /* AnimalImageLoader.swift in Sources */,
 				A1000007 /* ConfettiView.swift in Sources */,
+				A100000A /* SoundManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

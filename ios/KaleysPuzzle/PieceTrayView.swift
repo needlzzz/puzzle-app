@@ -263,6 +263,7 @@ class PieceTrayUIView: UIView, UIGestureRecognizerDelegate {
             dragGroup = group
             dragSourceView = pieceView
             scrollView.isScrollEnabled = false
+            SoundManager.shared.playPickup()
 
             // Create a floating image of the piece
             if let imageView = pieceView.subviews.first as? UIImageView,
