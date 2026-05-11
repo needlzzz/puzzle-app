@@ -59,7 +59,7 @@ enum AnimalImageLoader {
 
     // MARK: - Bundled Images
 
-    private static let bundledImageCount = 10
+    private static let bundledImageCount = 20
 
     /// Load a random bundled animal image from the asset catalog.
     /// Tries random indices until it finds one that exists, or gives up.
