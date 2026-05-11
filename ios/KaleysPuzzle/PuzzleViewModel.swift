@@ -110,7 +110,18 @@ final class PuzzleViewModel: ObservableObject {
 
         cameraX = canvasW / 2
         cameraY = canvasH / 2
-        cameraZoom = 1
+
+        // In landscape, zoom in so the puzzle fills the view (with a small edge visible)
+        // Use the smaller of width-fit and height-fit zoom to ensure all edges are visible
+        if isLandscape {
+            let puzzleActualW = CGFloat(cols) * pieceW
+            let puzzleActualH = CGFloat(rows) * pieceH
+            let zoomForWidth = (canvasW * 0.96) / puzzleActualW
+            let zoomForHeight = (canvasH * 0.92) / puzzleActualH
+            cameraZoom = min(zoomForWidth, zoomForHeight)
+        } else {
+            cameraZoom = 1
+        }
 
         edges = PuzzleEngine.generateEdges(rows: rows, cols: cols)
         gameState = PuzzleEngine.createGameState(cols: cols, rows: rows,

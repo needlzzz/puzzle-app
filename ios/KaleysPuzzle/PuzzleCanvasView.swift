@@ -186,7 +186,7 @@ class PuzzleBoardUIView: UIView {
         let canvasH = bounds.height
 
         // Background
-        ctx.setFillColor(UIColor(hex: 0x7A5E22).cgColor)
+        ctx.setFillColor(UIColor(hex: 0x1A1A1A).cgColor)
         ctx.fill(bounds)
 
         ctx.saveGState()
@@ -204,11 +204,12 @@ class PuzzleBoardUIView: UIView {
         ctx.stroke(CGRect(x: vm.puzzleX, y: vm.puzzleY, width: totalW, height: totalH))
         ctx.setLineDash(phase: 0, lengths: [])
 
-        // Hint image
+        // Hint image at 30% opacity
         if vm.showHint {
             ctx.saveGState()
-            ctx.setAlpha(0.18)
-            UIImage(cgImage: image).draw(in: CGRect(x: vm.puzzleX, y: vm.puzzleY, width: totalW, height: totalH))
+            UIGraphicsPushContext(ctx)
+            UIImage(cgImage: image).draw(in: CGRect(x: vm.puzzleX, y: vm.puzzleY, width: totalW, height: totalH), blendMode: .normal, alpha: 0.30)
+            UIGraphicsPopContext()
             ctx.restoreGState()
         }
 

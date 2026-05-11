@@ -68,7 +68,7 @@ enum AnimalImageLoader {
         indices.shuffle()
         for index in indices {
             // Try with namespace prefix
-            if let img = UIImage(named: "Animals/animal_\(index)") {
+            if let img = UIImage(named: "user-uploaded-pictures/animal_\(index)") {
                 return img
             }
             // Try without namespace prefix

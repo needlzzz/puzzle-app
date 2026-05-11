@@ -96,7 +96,7 @@ class PieceTrayUIView: UIView, UIGestureRecognizerDelegate {
 
         // Add top border
         let border = UIView()
-        border.backgroundColor = UIColor(hex: 0xFFF8E7).withAlphaComponent(0.3)
+        border.backgroundColor = UIColor.white.withAlphaComponent(0.15)
         border.translatesAutoresizingMaskIntoConstraints = false
         addSubview(border)
         NSLayoutConstraint.activate([
