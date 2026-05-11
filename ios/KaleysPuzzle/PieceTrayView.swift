@@ -198,15 +198,11 @@ class PieceTrayUIView: UIView, UIGestureRecognizerDelegate {
             context.addPath(path)
             context.clip()
 
-            // Draw image
-            context.saveGState()
+            // Draw image using UIImage (handles coordinate system correctly)
             let dstRect = CGRect(x: -CGFloat(piece.col) * vm.pieceW,
                                  y: -CGFloat(piece.row) * vm.pieceH,
                                  width: totalW, height: totalH)
-            context.translateBy(x: dstRect.origin.x, y: dstRect.origin.y + dstRect.height)
-            context.scaleBy(x: 1, y: -1)
-            context.draw(cgImage, in: CGRect(origin: .zero, size: dstRect.size))
-            context.restoreGState()
+            UIImage(cgImage: cgImage).draw(in: dstRect)
 
             // Stroke
             context.addPath(path)

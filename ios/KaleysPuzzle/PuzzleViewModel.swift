@@ -79,9 +79,11 @@ final class PuzzleViewModel: ObservableObject {
     }
 
     /// Initialize the puzzle layout sized to fit within the board area.
-    /// The board area is the top 3/4 of the canvas.
+    /// Only called ONCE per game — generates edges and game state.
     func initLayout(canvasW: CGFloat, canvasH: CGFloat) {
-        let isReinit = gameState != nil
+        // Prevent double-initialization
+        guard gameState == nil else { return }
+
         boardWidth = canvasW
         boardHeight = canvasH
 
@@ -109,57 +111,10 @@ final class PuzzleViewModel: ObservableObject {
         cameraY = canvasH / 2
         cameraZoom = 1
 
-        if isReinit {
-            // Recalculate piece positions proportionally
-            guard let state = gameState else { return }
-            for piece in state.pieces {
-                // Update correct positions
-                let newCorrectX = puzzleX + CGFloat(piece.col) * pieceW
-                let newCorrectY = puzzleY + CGFloat(piece.row) * pieceH
-
-                if piece.placed {
-                    piece.x = newCorrectX
-                    piece.y = newCorrectY
-                }
-                // Update the stored correct positions via a workaround
-                // (correctX/correctY are let constants, so we need to recreate)
-            }
-            // Since correctX/correctY are immutable, recreate game state
-            let placedIds = Set(state.pieces.filter { $0.placed }.map { $0.id })
-            let groupData = state.groups.map { (id: $0.id, pieceIds: $0.pieces.map { $0.id }, placed: $0.placed) }
-
-            edges = edges ?? PuzzleEngine.generateEdges(rows: rows, cols: cols)
-            gameState = PuzzleEngine.createGameState(cols: cols, rows: rows,
-                                                     pieceW: pieceW, pieceH: pieceH,
-                                                     puzzleX: puzzleX, puzzleY: puzzleY)
-            guard let newState = gameState else { return }
-
-            // Restore placed state
-            for piece in newState.pieces {
-                if placedIds.contains(piece.id) {
-                    piece.placed = true
-                    piece.x = piece.correctX
-                    piece.y = piece.correctY
-                }
-            }
-
-            // Restore groups
-            newState.groups.removeAll()
-            for gd in groupData {
-                let groupPieces = gd.pieceIds.compactMap { newState.piecesById[$0] }
-                let group = PuzzleEngine.Group(id: gd.id, pieces: groupPieces)
-                group.placed = gd.placed
-                for p in groupPieces {
-                    p.groupId = gd.id
-                }
-                newState.groups.append(group)
-            }
-        } else {
-            edges = PuzzleEngine.generateEdges(rows: rows, cols: cols)
-            gameState = PuzzleEngine.createGameState(cols: cols, rows: rows,
-                                                     pieceW: pieceW, pieceH: pieceH,
-                                                     puzzleX: puzzleX, puzzleY: puzzleY)
-        }
+        edges = PuzzleEngine.generateEdges(rows: rows, cols: cols)
+        gameState = PuzzleEngine.createGameState(cols: cols, rows: rows,
+                                                 pieceW: pieceW, pieceH: pieceH,
+                                                 puzzleX: puzzleX, puzzleY: puzzleY)
 
         trayNeedsUpdate.toggle()
     }

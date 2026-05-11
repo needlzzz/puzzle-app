@@ -10,7 +10,7 @@ class PuzzleBoardUIView: UIView {
 
     var viewModel: PuzzleViewModel? {
         didSet {
-            if viewModel?.edges != nil {
+            if viewModel?.edges != nil && piecePaths.isEmpty {
                 buildPiecePaths()
             }
         }
@@ -62,13 +62,6 @@ class PuzzleBoardUIView: UIView {
             vm.initLayout(canvasW: bounds.width, canvasH: bounds.height)
             buildPiecePaths()
             setNeedsDisplay()
-        } else if vm.gameState != nil && vm.gameActive {
-            // Check if size changed (rotation) — reinitialize layout
-            if abs(vm.boardWidth - bounds.width) > 1 || abs(vm.boardHeight - bounds.height) > 1 {
-                vm.initLayout(canvasW: bounds.width, canvasH: bounds.height)
-                buildPiecePaths()
-                setNeedsDisplay()
-            }
         }
     }
 
@@ -215,11 +208,7 @@ class PuzzleBoardUIView: UIView {
         if vm.showHint {
             ctx.saveGState()
             ctx.setAlpha(0.18)
-            ctx.saveGState()
-            ctx.translateBy(x: vm.puzzleX, y: vm.puzzleY + totalH)
-            ctx.scaleBy(x: 1, y: -1)
-            ctx.draw(image, in: CGRect(x: 0, y: 0, width: totalW, height: totalH))
-            ctx.restoreGState()
+            UIImage(cgImage: image).draw(in: CGRect(x: vm.puzzleX, y: vm.puzzleY, width: totalW, height: totalH))
             ctx.restoreGState()
         }
 
@@ -243,15 +232,11 @@ class PuzzleBoardUIView: UIView {
             }
         }
 
-        // Draw placed pieces only (pieces being dragged from tray are shown via floating image)
+        // Draw placed pieces (draw in row-major order, then reverse so later pieces' tabs
+        // paint over earlier pieces' blanks correctly)
         let piecesToDraw = state.pieces.filter { $0.placed }
-        let sorted = piecesToDraw.sorted { a, b in
-            if a.placed && !b.placed { return true }
-            if !a.placed && b.placed { return false }
-            return false
-        }
 
-        for piece in sorted {
+        for piece in piecesToDraw {
             drawPiece(ctx: ctx, piece: piece, image: image, vm: vm, totalW: totalW, totalH: totalH)
         }
 
@@ -281,20 +266,21 @@ class PuzzleBoardUIView: UIView {
         ctx.addPath(path)
         ctx.clip()
 
-        ctx.saveGState()
+        // Draw image using UIImage which handles coordinate flipping correctly
         let dstRect = CGRect(x: -CGFloat(piece.col) * vm.pieceW,
                              y: -CGFloat(piece.row) * vm.pieceH,
                              width: totalW, height: totalH)
-        ctx.translateBy(x: dstRect.origin.x, y: dstRect.origin.y + dstRect.height)
-        ctx.scaleBy(x: 1, y: -1)
-        ctx.draw(image, in: CGRect(origin: .zero, size: dstRect.size))
-        ctx.restoreGState()
+        UIImage(cgImage: image).draw(in: dstRect)
 
         ctx.restoreGState()
 
-        // Stroke — only for unplaced pieces
-        if !piece.placed {
-            ctx.addPath(path)
+        // Stroke — thin line on placed for visual alignment
+        ctx.addPath(path)
+        if piece.placed {
+            ctx.setStrokeColor(UIColor(white: 1, alpha: 0.15).cgColor)
+            ctx.setLineWidth(0.3)
+            ctx.strokePath()
+        } else {
             ctx.setStrokeColor(UIColor(white: 0, alpha: 0.15).cgColor)
             ctx.setLineWidth(3)
             ctx.strokePath()
