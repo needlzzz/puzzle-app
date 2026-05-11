@@ -37,6 +37,9 @@ final class PuzzleViewModel: ObservableObject {
     var edges: PuzzleEngine.Edges?
     var gameActive: Bool = false
 
+    // Shuffled piece order (set once at game start, stable across tray refreshes)
+    private var trayOrder: [Int] = []
+
     // MARK: - Camera (for the puzzle board area only)
 
     var cameraX: CGFloat = 0
@@ -128,13 +131,19 @@ final class PuzzleViewModel: ObservableObject {
                                                  pieceW: pieceW, pieceH: pieceH,
                                                  puzzleX: puzzleX, puzzleY: puzzleY)
 
+        // Shuffle piece order once for the tray
+        trayOrder = gameState!.pieces.map { $0.id }.shuffled()
+
         trayNeedsUpdate.toggle()
     }
 
-    /// Get unplaced pieces for the tray (shuffled for added challenge)
+    /// Get unplaced pieces for the tray (in shuffled order set at game start)
     func getUnplacedPieces() -> [PuzzleEngine.Piece] {
         guard let state = gameState else { return [] }
-        return state.pieces.filter { !$0.placed }.shuffled()
+        let unplaced = Set(state.pieces.filter { !$0.placed }.map { $0.id })
+        return trayOrder.compactMap { id in
+            unplaced.contains(id) ? state.piecesById[id] : nil
+        }
     }
 
     func trySnapGroup(_ group: PuzzleEngine.Group) {
