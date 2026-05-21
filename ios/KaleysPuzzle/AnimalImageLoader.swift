@@ -59,24 +59,79 @@ enum AnimalImageLoader {
 
     // MARK: - Bundled Images
 
-    private static let bundledImageCount = 20
+    /// Dynamically counts how many animal_N images are available in the asset catalog.
+    /// Tries indices starting from 1 until it finds a gap.
+    private static var bundledImageCount: Int = {
+        var count = 0
+        for i in 1...100 {
+            if UIImage(named: "user-uploaded-pictures/animal_\(i)") != nil ||
+               UIImage(named: "animal_\(i)") != nil {
+                count = i
+            } else {
+                break
+            }
+        }
+        return count
+    }()
 
     /// Load a random bundled animal image from the asset catalog.
     /// Tries random indices until it finds one that exists, or gives up.
+    /// Automatically center-crops to 4:3 aspect ratio.
     static func loadBundledImage() -> UIImage? {
         var indices = Array(1...bundledImageCount)
         indices.shuffle()
         for index in indices {
             // Try with namespace prefix
             if let img = UIImage(named: "user-uploaded-pictures/animal_\(index)") {
-                return img
+                return cropTo4x3(img)
             }
             // Try without namespace prefix
             if let img = UIImage(named: "animal_\(index)") {
-                return img
+                return cropTo4x3(img)
             }
         }
         return nil
+    }
+
+    // MARK: - Center Crop to 4:3
+
+    /// Center-crops any image to 4:3 aspect ratio (landscape).
+    /// If the image is already 4:3, returns it unchanged.
+    private static func cropTo4x3(_ image: UIImage) -> UIImage {
+        let targetAspect: CGFloat = 4.0 / 3.0
+        let imageW = image.size.width
+        let imageH = image.size.height
+        let imageAspect = imageW / imageH
+
+        // Already close enough to 4:3
+        if abs(imageAspect - targetAspect) < 0.01 {
+            return image
+        }
+
+        let cropRect: CGRect
+        if imageAspect > targetAspect {
+            // Image is wider than 4:3 — crop sides
+            let newW = imageH * targetAspect
+            let xOffset = (imageW - newW) / 2
+            cropRect = CGRect(x: xOffset, y: 0, width: newW, height: imageH)
+        } else {
+            // Image is taller than 4:3 — crop top/bottom
+            let newH = imageW / targetAspect
+            let yOffset = (imageH - newH) / 2
+            cropRect = CGRect(x: 0, y: yOffset, width: imageW, height: newH)
+        }
+
+        // CGImage crop uses pixel coordinates, account for scale
+        let scale = image.scale
+        let pixelRect = CGRect(x: cropRect.origin.x * scale,
+                               y: cropRect.origin.y * scale,
+                               width: cropRect.width * scale,
+                               height: cropRect.height * scale)
+
+        guard let cgImage = image.cgImage?.cropping(to: pixelRect) else {
+            return image
+        }
+        return UIImage(cgImage: cgImage, scale: scale, orientation: image.imageOrientation)
     }
 
     private static func tryLoadImage(from urlString: String, timeout: TimeInterval) async -> UIImage? {
@@ -91,7 +146,7 @@ enum AnimalImageLoader {
                   let image = UIImage(data: data) else {
                 return nil
             }
-            return image
+            return cropTo4x3(image)
         } catch {
             return nil
         }

@@ -187,6 +187,10 @@ struct GameScreenView: View {
                                 .font(.system(size: 14, weight: .medium, design: .rounded))
                                 .foregroundColor(.white)
 
+                            BarButton(label: "🧩 Edges", isActive: viewModel.traySortMode == .edgesFirst) {
+                                viewModel.toggleTraySortMode()
+                            }
+
                             BarButton(label: "🖼 Hint", isActive: viewModel.showHint) {
                                 viewModel.showHint.toggle()
                             }

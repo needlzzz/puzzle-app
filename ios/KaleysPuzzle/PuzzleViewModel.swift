@@ -11,6 +11,11 @@ final class PuzzleViewModel: ObservableObject {
         case win
     }
 
+    enum TraySortMode {
+        case shuffled
+        case edgesFirst
+    }
+
     // MARK: - Published State
 
     @Published var screen: Screen = .start
@@ -21,6 +26,7 @@ final class PuzzleViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var puzzleImage: UIImage?
     @Published var trayNeedsUpdate: Bool = false
+    @Published var traySortMode: TraySortMode = .shuffled
 
     // MARK: - Game Configuration
 
@@ -141,9 +147,34 @@ final class PuzzleViewModel: ObservableObject {
     func getUnplacedPieces() -> [PuzzleEngine.Piece] {
         guard let state = gameState else { return [] }
         let unplaced = Set(state.pieces.filter { !$0.placed }.map { $0.id })
-        return trayOrder.compactMap { id in
+        let pieces = trayOrder.compactMap { id in
             unplaced.contains(id) ? state.piecesById[id] : nil
         }
+
+        switch traySortMode {
+        case .shuffled:
+            return pieces
+        case .edgesFirst:
+            // Edge/corner pieces first, then interior pieces
+            return pieces.sorted { a, b in
+                let aIsEdge = isEdgePiece(a)
+                let bIsEdge = isEdgePiece(b)
+                if aIsEdge && !bIsEdge { return true }
+                if !aIsEdge && bIsEdge { return false }
+                return false // preserve relative order within each group
+            }
+        }
+    }
+
+    /// Whether a piece sits on the border of the puzzle grid (edge or corner)
+    private func isEdgePiece(_ piece: PuzzleEngine.Piece) -> Bool {
+        return piece.row == 0 || piece.row == rows - 1 ||
+               piece.col == 0 || piece.col == cols - 1
+    }
+
+    func toggleTraySortMode() {
+        traySortMode = (traySortMode == .shuffled) ? .edgesFirst : .shuffled
+        trayNeedsUpdate.toggle()
     }
 
     func trySnapGroup(_ group: PuzzleEngine.Group) {
