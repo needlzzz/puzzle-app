@@ -15,26 +15,53 @@ import kotlin.random.Random
 object AnimalImageGenerator {
 
     data class Animal(
+        val key: String,
         val name: String,
         val emoji: String,
         val bg: List<Int>
     )
 
-    private val animals = listOf(
-        Animal("Lion", "🦁", listOf(0xFFF4A460.toInt(), 0xFFCD853F.toInt(), 0xFFDEB887.toInt())),
-        Animal("Elephant", "🐘", listOf(0xFF708090.toInt(), 0xFF778899.toInt(), 0xFFB0C4DE.toInt())),
-        Animal("Fox", "🦊", listOf(0xFFFF8C00.toInt(), 0xFFFF6347.toInt(), 0xFFFFD700.toInt())),
-        Animal("Dolphin", "🐬", listOf(0xFF00CED1.toInt(), 0xFF1E90FF.toInt(), 0xFF87CEEB.toInt())),
-        Animal("Owl", "🦉", listOf(0xFF2E0854.toInt(), 0xFF4B0082.toInt(), 0xFF6A0DAD.toInt())),
-        Animal("Penguin", "🐧", listOf(0xFF4682B4.toInt(), 0xFFB0E0E6.toInt(), 0xFFF0F8FF.toInt())),
-        Animal("Tiger", "🐯", listOf(0xFFFF8C00.toInt(), 0xFFFF4500.toInt(), 0xFFFFD700.toInt())),
-        Animal("Bear", "🐻", listOf(0xFF228B22.toInt(), 0xFF2E8B57.toInt(), 0xFF90EE90.toInt())),
-        Animal("Cat", "🐱", listOf(0xFFFF69B4.toInt(), 0xFFFFB6C1.toInt(), 0xFFFFC0CB.toInt())),
-        Animal("Wolf", "🐺", listOf(0xFF2F4F4F.toInt(), 0xFF696969.toInt(), 0xFFA9A9A9.toInt())),
+    /** The 10 curated animals, in display order. Shared with the picker UI. */
+    val animals = listOf(
+        Animal("lion", "Lion", "🦁", listOf(0xFFF4A460.toInt(), 0xFFCD853F.toInt(), 0xFFDEB887.toInt())),
+        Animal("elephant", "Elephant", "🐘", listOf(0xFF708090.toInt(), 0xFF778899.toInt(), 0xFFB0C4DE.toInt())),
+        Animal("fox", "Fox", "🦊", listOf(0xFFFF8C00.toInt(), 0xFFFF6347.toInt(), 0xFFFFD700.toInt())),
+        Animal("dolphin", "Dolphin", "🐬", listOf(0xFF00CED1.toInt(), 0xFF1E90FF.toInt(), 0xFF87CEEB.toInt())),
+        Animal("owl", "Owl", "🦉", listOf(0xFF2E0854.toInt(), 0xFF4B0082.toInt(), 0xFF6A0DAD.toInt())),
+        Animal("penguin", "Penguin", "🐧", listOf(0xFF4682B4.toInt(), 0xFFB0E0E6.toInt(), 0xFFF0F8FF.toInt())),
+        Animal("tiger", "Tiger", "🐯", listOf(0xFFFF8C00.toInt(), 0xFFFF4500.toInt(), 0xFFFFD700.toInt())),
+        Animal("bear", "Bear", "🐻", listOf(0xFF228B22.toInt(), 0xFF2E8B57.toInt(), 0xFF90EE90.toInt())),
+        Animal("cat", "Cat", "🐱", listOf(0xFFFF69B4.toInt(), 0xFFFFB6C1.toInt(), 0xFFFFC0CB.toInt())),
+        Animal("wolf", "Wolf", "🐺", listOf(0xFF2F4F4F.toInt(), 0xFF696969.toInt(), 0xFFA9A9A9.toInt())),
     )
 
+    const val SURPRISE_KEY = "surprise"
+
+    fun animalForKey(key: String?): Animal =
+        animals.find { it.key == key } ?: animals[Random.nextInt(animals.size)]
+
+    /**
+     * Generate an image for a specific chosen animal. A null key or the
+     * "surprise" key picks a random animal.
+     */
+    fun generate(
+        animalKey: String?,
+        width: Int = PuzzleEngine.IMAGE_W,
+        height: Int = PuzzleEngine.IMAGE_H
+    ): Bitmap {
+        val animal = if (animalKey == null || animalKey == SURPRISE_KEY) {
+            animals[Random.nextInt(animals.size)]
+        } else {
+            animalForKey(animalKey)
+        }
+        return render(animal, width, height)
+    }
+
     fun generate(width: Int = PuzzleEngine.IMAGE_W, height: Int = PuzzleEngine.IMAGE_H): Bitmap {
-        val animal = animals[Random.nextInt(animals.size)]
+        return render(animals[Random.nextInt(animals.size)], width, height)
+    }
+
+    private fun render(animal: Animal, width: Int, height: Int): Bitmap {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)

@@ -3,13 +3,55 @@
     <string name="app_name">Kaley\'s Puzzle</string>
     <string name="title">🧩 Kaley\'s Puzzle App</string>
     <string name="subtitle">Made with love by your PAPA ❤️</string>
-    <string name="choose_difficulty">Choose your difficulty</string>
-    <string name="pieces_20">20 pieces</string>
-    <string name="pieces_50">50 pieces</string>
-    <string name="pieces_100">100 pieces</string>
-    <string name="pieces_150">150 pieces</string>
-    <string name="hint">🖼 Hint</string>
+
+    <!-- Animal picker -->
+    <string name="pick_animal">Pick an animal</string>
+    <string name="surprise">🎲\nSurprise</string>
+    <string name="your_animals">Your animals</string>
+
+    <!-- Difficulty tiers -->
+    <string name="how_big">How big?</string>
+    <string name="tier_tiny">🐣\nTiny</string>
+    <string name="tier_small">🐥\nSmall</string>
+    <string name="tier_medium">🐔\nMedium</string>
+    <string name="tier_big">🦅\nBig</string>
+
+    <!-- Settings -->
+    <string name="sound_on">🔊 Sound</string>
+    <string name="sound_off">🔇 Muted</string>
+    <string name="timer_on">⏱ Timer on</string>
+    <string name="timer_off">⏱ Timer off</string>
+    <string name="how_to_play">❓ How to play</string>
+
+    <!-- Game bar -->
+    <string name="edges">🧩 Edges</string>
+    <string name="peek">🖼 Peek</string>
+    <string name="center">🎯 Center</string>
     <string name="new_puzzle">🔄 New</string>
+    <string name="loading_animal">Loading…</string>
+
+    <!-- Win -->
+    <string name="you_did_it">You did it! 🎉</string>
+    <string name="play_again">🔁 Play again</string>
+    <string name="choose_another">🐾 Choose another</string>
+
+    <!-- Tutorial -->
+    <string name="tutorial_title">How to play</string>
+    <string name="tutorial_step1">👆 Drag a piece from the side onto the picture.</string>
+    <string name="tutorial_step2">🧩 When it\'s close to the right spot, it snaps in!</string>
+    <string name="tutorial_step3">🖼 Tap Peek to see the whole picture.</string>
+    <string name="tutorial_step4">🎉 Fill the picture to win. Have fun, Kaley!</string>
+    <string name="lets_go">Let\'s go! 🚀</string>
+
+    <!-- Confirm new puzzle -->
+    <string name="confirm_title">Start a new puzzle?</string>
+    <string name="confirm_msg">This puzzle will go away.</string>
+    <string name="keep_playing">Keep playing</string>
+    <string name="confirm_new">New puzzle</string>
+
+    <!-- Legacy (kept for compatibility) -->
+    <string name="choose_difficulty">How big?</string>
+    <string name="hint">🖼 Peek</string>
     <string name="puzzle_complete">🎉 Puzzle Complete!</string>
     <string name="new_puzzle_btn">New Puzzle</string>
 </resources>

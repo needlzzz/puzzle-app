@@ -30,6 +30,8 @@ class PuzzleView @JvmOverloads constructor(
     var viewModel: PuzzleViewModel? = null
     var onPiecePlaced: (() -> Unit)? = null
     var onPuzzleComplete: (() -> Unit)? = null
+    var onSnap: (() -> Unit)? = null
+    var onPickUp: (() -> Unit)? = null
 
     // Paints
     private val outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -57,6 +59,11 @@ class PuzzleView @JvmOverloads constructor(
     private val pieceShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         color = Color.argb(38, 0, 0, 0)
+        strokeWidth = 3f
+    }
+    private val edgeHighlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        color = Color.argb(230, 0, 212, 170) // teal accent #00D4AA
         strokeWidth = 3f
     }
 
@@ -252,9 +259,23 @@ class PuzzleView @JvmOverloads constructor(
         } else {
             canvas.drawPath(path, pieceShadowPaint)
             canvas.drawPath(path, pieceStrokeUnplaced)
+            // Highlight edge/corner pieces to help kids start with the frame
+            if (vm.showEdges && PuzzleEngine.isEdgePiece(piece, vm.cols, vm.rows)) {
+                edgeHighlightPaint.strokeWidth = 3f / vm.cameraZoom
+                canvas.drawPath(path, edgeHighlightPaint)
+            }
         }
 
         canvas.restore()
+    }
+
+    /** Reset the camera so the whole board is centered at 1x zoom. */
+    fun recenter() {
+        val vm = viewModel ?: return
+        vm.cameraX = vm.puzzleX + vm.cols * vm.pieceW / 2f
+        vm.cameraY = vm.puzzleY + vm.rows * vm.pieceH / 2f
+        vm.cameraZoom = 1f
+        invalidate()
     }
 
     // ===== HIT TESTING =====
@@ -329,6 +350,7 @@ class PuzzleView @JvmOverloads constructor(
             dragPiece = piece
             dragOffsetX = worldX - piece.x
             dragOffsetY = worldY - piece.y
+            onPickUp?.invoke()
 
             // Bring group pieces to top of render order
             if (group != null) {
@@ -427,10 +449,15 @@ class PuzzleView @JvmOverloads constructor(
         val group = dragGroup ?: return
         if (group.placed) return
 
+        // Larger, finger-friendly snap radius that scales with piece size.
+        val snapDistance = max(PuzzleEngine.SNAP_DISTANCE, min(vm.pieceW, vm.pieceH) * 0.5f)
         val result = PuzzleEngine.trySnap(
             group, vm.cols, vm.rows, vm.pieceW, vm.pieceH,
-            state.piecesById, state.groups
+            state.piecesById, state.groups, snapDistance
         )
+        if (result.snapped) {
+            onSnap?.invoke()
+        }
         if (result.placedCount > 0) {
             vm.placedPieces += result.placedCount
             onPiecePlaced?.invoke()

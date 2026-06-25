@@ -120,6 +120,15 @@ enum PuzzleEngine {
         return Edges(h: h, v: v)
     }
 
+    // MARK: - Edge Detection
+
+    /// Whether a piece sits on the border of the puzzle grid (edge or corner).
+    /// Convergence target shared with puzzle-engine.js / PuzzleEngine.kt.
+    static func isEdgePiece(_ piece: Piece, cols: Int, rows: Int) -> Bool {
+        return piece.row == 0 || piece.row == rows - 1 ||
+               piece.col == 0 || piece.col == cols - 1
+    }
+
     // MARK: - Neighbors
 
     static func getNeighbors(piece: Piece, cols: Int, rows: Int, piecesById: [Int: Piece]) -> [Piece] {

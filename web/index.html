@@ -8,46 +8,101 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Start Screen -->
+  <!-- ===== Start Screen ===== -->
   <div id="start-screen">
-    <h1>🧩 Kaley's Puzzle App</h1>
-    <p class="subtitle">Made with love by your PAPA ❤️</p>
-    <p>Choose your difficulty</p>
-    <div id="difficulty-buttons">
-      <button class="diff-btn" data-pieces="20">20 pieces</button>
-      <button class="diff-btn" data-pieces="50">50 pieces</button>
-      <button class="diff-btn" data-pieces="100">100 pieces</button>
-      <button class="diff-btn" data-pieces="150">150 pieces</button>
+    <div class="hero">
+      <h1>🧩 Kaley's Puzzle</h1>
+      <p class="subtitle">Made with love by your PAPA ❤️</p>
     </div>
+
+    <!-- Continue (only shown when a saved puzzle exists) -->
+    <div id="continue-row" class="hidden">
+      <button id="continue-btn" class="big-action continue">▶ Keep playing</button>
+    </div>
+
+    <div id="picker">
+      <h2 class="picker-title">Pick an animal</h2>
+      <div id="animal-grid" role="list" aria-label="Choose an animal"></div>
+
+      <h2 class="picker-title">How big?</h2>
+      <div id="difficulty-row" role="list" aria-label="Choose difficulty"></div>
+
+      <button id="start-btn" class="big-action start" disabled>Let's go! 🚀</button>
+    </div>
+
+    <!-- Collection of earned animals -->
+    <div id="collection-wrap" class="hidden">
+      <h2 class="picker-title">⭐ My animals</h2>
+      <div id="collection" role="list" aria-label="Animals you have finished"></div>
+    </div>
+
+    <div id="start-actions">
+      <button id="replay-tutorial-btn" class="chip">🔁 Show me how</button>
+      <button id="mute-toggle-start" class="chip" aria-pressed="false">🔊 Sound</button>
+      <button id="timer-toggle-start" class="chip" aria-pressed="false">⏱ Timer off</button>
+    </div>
+
     <div id="loading" class="hidden">
-      <p>Loading animal image...</p>
+      <p>Loading your animal…</p>
       <div class="spinner"></div>
     </div>
   </div>
 
-  <!-- Game Screen -->
+  <!-- ===== Game Screen ===== -->
   <div id="game-screen" class="hidden">
     <canvas id="puzzle-canvas"></canvas>
+
     <div id="ui-bar">
-      <div id="timer">⏱ 00:00</div>
-      <div id="piece-counter">0 / 0</div>
-      <button id="hint-toggle" title="Toggle image hint">🖼 Hint</button>
-      <button id="new-puzzle-btn" title="New puzzle">🔄 New</button>
+      <div id="progress-wrap" aria-label="Puzzle progress">
+        <div id="progress-fill"></div>
+        <span id="progress-emoji">🐾</span>
+      </div>
+      <div id="timer" class="hidden">⏱ 00:00</div>
+      <button id="edges-toggle" class="tool-btn" title="Find the border pieces">🧩 Edges</button>
+      <button id="hint-toggle" class="tool-btn" title="Show the picture">🖼 Hint</button>
+      <button id="mute-toggle" class="tool-btn" title="Sound on/off">🔊</button>
+      <button id="new-puzzle-btn" class="tool-btn" title="New puzzle">🔄 New</button>
+    </div>
+
+    <button id="center-btn" title="Show everything">🎯</button>
+
+    <!-- First-run tutorial layer -->
+    <div id="tutorial-layer" class="hidden">
+      <div class="tutorial-scrim"></div>
+      <div id="tutorial-hand">👆</div>
+      <p class="tutorial-text">Drag a piece onto the picture!</p>
     </div>
   </div>
 
-  <!-- Win Overlay -->
+  <!-- ===== New-puzzle confirmation ===== -->
+  <div id="confirm-overlay" class="hidden">
+    <div class="confirm-card">
+      <p class="confirm-text">Start a new puzzle?</p>
+      <p class="confirm-sub">Your picture so far will go away.</p>
+      <div class="confirm-actions">
+        <button id="confirm-cancel" class="big-action cancel">Keep playing</button>
+        <button id="confirm-ok" class="big-action danger">New puzzle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Win Overlay ===== -->
   <div id="win-overlay" class="hidden">
     <canvas id="confetti-canvas"></canvas>
     <div id="win-content">
-      <h2>🎉 Puzzle Complete!</h2>
-      <p id="win-time"></p>
-      <p id="win-pieces"></p>
-      <button id="win-new-btn">New Puzzle</button>
+      <h2>🎉 You did it!</h2>
+      <div id="win-progress"><div id="win-progress-fill"></div></div>
+      <p id="win-time" class="hidden"></p>
+      <div class="win-actions">
+        <button id="win-again-btn" class="big-action start">🔁 Play again</button>
+        <button id="win-choose-btn" class="big-action cancel">🐾 Choose another</button>
+      </div>
     </div>
   </div>
 
   <script src="puzzle-engine.js"></script>
+  <script src="sound.js"></script>
+  <script src="storage.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

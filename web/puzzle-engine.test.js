@@ -6,6 +6,7 @@ const {
   worldToScreen,
   generateEdges,
   getNeighbors,
+  isEdgePiece,
   createGameState,
   trySnap,
   mergeGroups,
@@ -303,3 +304,85 @@ describe('generateEdges', () => {
     assert.equal(edges.v[0].length, 0);
   });
 });
+
+
+// ===== 7. Edge-piece detection (edges-first helper) =====
+describe('isEdgePiece', () => {
+  it('marks all four corners of a grid as edges', () => {
+    const cols = 5, rows = 4;
+    const corners = [
+      { col: 0, row: 0 },
+      { col: cols - 1, row: 0 },
+      { col: 0, row: rows - 1 },
+      { col: cols - 1, row: rows - 1 },
+    ];
+    for (const c of corners) {
+      assert.ok(isEdgePiece(c, cols, rows), `corner ${c.col},${c.row} should be an edge`);
+    }
+  });
+
+  it('marks each outer border position as an edge', () => {
+    const cols = 5, rows = 4;
+    for (let col = 0; col < cols; col++) {
+      assert.ok(isEdgePiece({ col, row: 0 }, cols, rows), `top ${col}`);
+      assert.ok(isEdgePiece({ col, row: rows - 1 }, cols, rows), `bottom ${col}`);
+    }
+    for (let row = 0; row < rows; row++) {
+      assert.ok(isEdgePiece({ col: 0, row }, cols, rows), `left ${row}`);
+      assert.ok(isEdgePiece({ col: cols - 1, row }, cols, rows), `right ${row}`);
+    }
+  });
+
+  it('does not mark interior pieces as edges', () => {
+    const cols = 5, rows = 4;
+    for (let col = 1; col < cols - 1; col++) {
+      for (let row = 1; row < rows - 1; row++) {
+        assert.ok(!isEdgePiece({ col, row }, cols, rows), `interior ${col},${row} should not be an edge`);
+      }
+    }
+  });
+
+  it('treats every piece of a single-row grid as an edge', () => {
+    const cols = 6, rows = 1;
+    for (let col = 0; col < cols; col++) {
+      assert.ok(isEdgePiece({ col, row: 0 }, cols, rows), `1xN col ${col}`);
+    }
+  });
+
+  it('treats every piece of a single-column grid as an edge', () => {
+    const cols = 1, rows = 6;
+    for (let row = 0; row < rows; row++) {
+      assert.ok(isEdgePiece({ col: 0, row }, cols, rows), `Nx1 row ${row}`);
+    }
+  });
+
+  it('treats the only piece of a 1x1 grid as an edge', () => {
+    assert.ok(isEdgePiece({ col: 0, row: 0 }, 1, 1));
+  });
+});
+
+
+// ===== 8. Custom snap distance (proportional snapping for small hands) =====
+describe('trySnap with custom snapDistance', () => {
+  it('snaps to correct position when within the supplied distance but not the default', () => {
+    // Default SNAP_DISTANCE is 35; place a piece 60px away and use a 70px snap distance.
+    const cols = 2, rows = 1, pieceW = 200, pieceH = 200;
+    const gs = createGameState(cols, rows, pieceW, pieceH, 0, 0);
+    const state = { cols, rows, pieceW, pieceH, piecesById: gs.piecesById, groups: gs.groups };
+    const piece = gs.piecesById[0];
+    const group = gs.groups.find((g) => g.id === piece.groupId);
+
+    // Move 60px off — outside default (35) but inside custom (70)
+    piece.x = piece.correctX + 60;
+    piece.y = piece.correctY;
+
+    const tooTight = trySnap(group, state, 35);
+    assert.equal(tooTight.snapped, false, 'should not snap with a 35px tolerance');
+
+    const forgiving = trySnap(group, state, 70);
+    assert.equal(forgiving.snapped, true, 'should snap with a 70px tolerance');
+    assert.equal(piece.x, piece.correctX);
+    assert.equal(piece.y, piece.correctY);
+  });
+});
+

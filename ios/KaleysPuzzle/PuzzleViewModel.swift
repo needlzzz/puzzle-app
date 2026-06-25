@@ -28,6 +28,33 @@ final class PuzzleViewModel: ObservableObject {
     @Published var trayNeedsUpdate: Bool = false
     @Published var traySortMode: TraySortMode = .shuffled
 
+    // MARK: - Kid-friendly UX state
+
+    /// The animal the child picked on the start screen (or "surprise").
+    @Published var selectedAnimalKey: String = Animals.surpriseKey
+    /// Friendly celebratory line shown briefly when a milestone is reached.
+    @Published var milestoneText: String? = nil
+    /// First-run / replayable tutorial overlay.
+    @Published var showTutorial: Bool = false
+    /// Confirm overlay before abandoning the current puzzle.
+    @Published var showConfirmNew: Bool = false
+    /// Settings mirrored from Storage so the UI can bind to them.
+    @Published var isMuted: Bool = Storage.isMuted
+    @Published var showTimer: Bool = Storage.showTimer
+    /// Animal keys the child has completed at least once.
+    @Published var collection: Set<String> = Storage.collection()
+
+    /// Progress as a 0...1 fraction, for the paw progress bar.
+    var progress: CGFloat {
+        totalPieces > 0 ? CGFloat(placedPieces) / CGFloat(totalPieces) : 0
+    }
+
+    /// The resolved animal for the active game (drives the win screen).
+    private(set) var activeAnimal: Animals.Animal = Animals.all[0]
+
+    /// Progress milestones already celebrated this game (avoids repeats).
+    private var firedMilestones: Set<Int> = []
+
     // MARK: - Game Configuration
 
     var cols: Int = 0
@@ -65,12 +92,18 @@ final class PuzzleViewModel: ObservableObject {
 
     // MARK: - Game Lifecycle
 
-    func startNewGame(pieceCount: Int) async {
+    func startNewGame(pieceCount: Int, animalKey: String) async {
+        selectedAnimalKey = animalKey
+        let resolved = Animals.resolve(animalKey)
+        activeAnimal = resolved
+
         isLoading = true
         screen = .game
+        firedMilestones = []
+        milestoneText = nil
 
-        // Load image
-        let image = await AnimalImageLoader.loadImage()
+        // Load image for the chosen animal
+        let image = await AnimalImageLoader.loadImage(for: resolved.key)
         puzzleImage = image
 
         let grid = PuzzleEngine.computeGrid(count: pieceCount)
@@ -168,8 +201,7 @@ final class PuzzleViewModel: ObservableObject {
 
     /// Whether a piece sits on the border of the puzzle grid (edge or corner)
     private func isEdgePiece(_ piece: PuzzleEngine.Piece) -> Bool {
-        return piece.row == 0 || piece.row == rows - 1 ||
-               piece.col == 0 || piece.col == cols - 1
+        return PuzzleEngine.isEdgePiece(piece, cols: cols, rows: rows)
     }
 
     func toggleTraySortMode() {
@@ -196,14 +228,39 @@ final class PuzzleViewModel: ObservableObject {
             placedPieces += result.placedCount
             SoundManager.shared.playSnap()
             trayNeedsUpdate.toggle() // trigger tray refresh
+            checkMilestones()
             if placedPieces >= totalPieces {
                 gameActive = false
                 stopTimer()
+                // Record the win in the collection
+                collection.insert(activeAnimal.key)
+                Storage.addToCollection(activeAnimal.key)
                 screen = .win
                 SoundManager.shared.playWin()
             }
         } else if !result.snapped {
             SoundManager.shared.playDrop()
+        }
+    }
+
+    /// Celebrate when the child crosses 25% / 50% / 75% of the puzzle.
+    private func checkMilestones() {
+        guard totalPieces > 0 else { return }
+        let pct = Int((CGFloat(placedPieces) / CGFloat(totalPieces)) * 100)
+        let milestones: [(threshold: Int, text: String)] = [
+            (25, "Great start! 🌟"),
+            (50, "Halfway there! 🎈"),
+            (75, "Almost done! 🚀"),
+        ]
+        for m in milestones where pct >= m.threshold && !firedMilestones.contains(m.threshold) {
+            firedMilestones.insert(m.threshold)
+            milestoneText = m.text
+            SoundManager.shared.playMilestone()
+            // Auto-dismiss the banner after a short, gentle moment.
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 1_600_000_000)
+                if self?.milestoneText == m.text { self?.milestoneText = nil }
+            }
         }
     }
 
@@ -213,7 +270,69 @@ final class PuzzleViewModel: ObservableObject {
         puzzleImage = nil
         gameState = nil
         edges = nil
+        showConfirmNew = false
+        milestoneText = nil
+        collection = Storage.collection()
         screen = .start
+    }
+
+    // MARK: - Win actions
+
+    /// Start another puzzle of the same animal and size.
+    func playAgain() async {
+        let count = totalPieces
+        gameState = nil
+        edges = nil
+        await startNewGame(pieceCount: count, animalKey: selectedAnimalKey)
+    }
+
+    // MARK: - New-puzzle confirmation
+
+    func requestNewPuzzle() {
+        // If the child has barely started, skip the confirm for speed.
+        if placedPieces == 0 {
+            resetToStart()
+        } else {
+            showConfirmNew = true
+        }
+    }
+
+    func confirmNewPuzzle() {
+        resetToStart()
+    }
+
+    func cancelNewPuzzle() {
+        showConfirmNew = false
+    }
+
+    // MARK: - Settings
+
+    func toggleMute() {
+        isMuted.toggle()
+        SoundManager.shared.setMuted(isMuted)
+    }
+
+    func toggleShowTimer() {
+        showTimer.toggle()
+        Storage.showTimer = showTimer
+    }
+
+    // MARK: - Tutorial
+
+    /// Show the tutorial automatically on first launch.
+    func showTutorialIfFirstRun() {
+        if !Storage.tutorialSeen {
+            showTutorial = true
+        }
+    }
+
+    func dismissTutorial() {
+        showTutorial = false
+        Storage.tutorialSeen = true
+    }
+
+    func replayTutorial() {
+        showTutorial = true
     }
 
     // MARK: - Timer

@@ -25,6 +25,14 @@ class PuzzleViewModel : ViewModel() {
     var placedPieces: Int = 0
     var gameActive: Boolean = false
     var showHint: Boolean = false
+    var showEdges: Boolean = false
+
+    // Chosen animal for this game ("surprise" picks randomly each game)
+    var selectedAnimalKey: String = AnimalImageGenerator.SURPRISE_KEY
+    var activeAnimalKey: String = AnimalImageGenerator.SURPRISE_KEY
+
+    // Milestone celebration tracking (25% / 50% / 75%)
+    private val firedMilestones: MutableSet<Int> = mutableSetOf()
 
     // Timer
     var timerStartMs: Long = 0L
@@ -38,18 +46,50 @@ class PuzzleViewModel : ViewModel() {
     // Track if game was initialized (to distinguish fresh start from rotation)
     var initialized: Boolean = false
 
-    fun startNewGame(pieceCount: Int) {
+    fun startNewGame(pieceCount: Int, animalKey: String = selectedAnimalKey) {
         val grid = PuzzleEngine.computeGrid(pieceCount)
         cols = grid.cols
         rows = grid.rows
         totalPieces = cols * rows
-        puzzleImage = AnimalImageGenerator.generate()
+        val resolvedKey = if (animalKey == AnimalImageGenerator.SURPRISE_KEY) {
+            AnimalImageGenerator.animalForKey(null).key
+        } else {
+            animalKey
+        }
+        activeAnimalKey = resolvedKey
+        puzzleImage?.recycle()
+        puzzleImage = AnimalImageGenerator.generate(resolvedKey)
         placedPieces = 0
         showHint = false
+        showEdges = false
         gameActive = true
+        firedMilestones.clear()
         timerStartMs = System.currentTimeMillis()
         elapsedBeforePauseMs = 0L
         initialized = true
+    }
+
+    val activeAnimal: AnimalImageGenerator.Animal
+        get() = AnimalImageGenerator.animalForKey(activeAnimalKey)
+
+    /** Fraction of pieces placed, 0f..1f. */
+    val progress: Float
+        get() = if (totalPieces > 0) placedPieces.toFloat() / totalPieces else 0f
+
+    /**
+     * Returns a milestone celebration message if a new 25/50/75% threshold was
+     * just crossed, otherwise null. Each milestone fires at most once per game.
+     */
+    fun checkMilestone(): Int? {
+        if (totalPieces <= 0) return null
+        val pct = (placedPieces * 100) / totalPieces
+        for (threshold in intArrayOf(75, 50, 25)) {
+            if (pct >= threshold && !firedMilestones.contains(threshold)) {
+                firedMilestones.add(threshold)
+                return threshold
+            }
+        }
+        return null
     }
 
     fun initLayout(canvasW: Float, canvasH: Float) {

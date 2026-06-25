@@ -100,6 +100,15 @@ object PuzzleEngine {
     }
 
     /**
+     * Whether a piece sits on the border of the puzzle grid (edge or corner).
+     * Convergence target shared with puzzle-engine.js / PuzzleEngine.swift.
+     */
+    fun isEdgePiece(piece: Piece, cols: Int, rows: Int): Boolean {
+        return piece.row == 0 || piece.row == rows - 1 ||
+               piece.col == 0 || piece.col == cols - 1
+    }
+
+    /**
      * Get the grid neighbors of a piece (up/down/left/right).
      */
     fun getNeighbors(piece: Piece, cols: Int, rows: Int, piecesById: Map<Int, Piece>): List<Piece> {

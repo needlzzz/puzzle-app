@@ -73,6 +73,20 @@ function generateEdges(rows, cols) {
 }
 
 /**
+ * True iff the piece sits on the outer border of the grid.
+ * Pure helper used by the edge-pieces helper (highlight border pieces first).
+ * Ported to Swift/Kotlin as the cross-platform convergence target.
+ */
+function isEdgePiece(piece, cols, rows) {
+  return (
+    piece.col === 0 ||
+    piece.col === cols - 1 ||
+    piece.row === 0 ||
+    piece.row === rows - 1
+  );
+}
+
+/**
  * Get the grid neighbors of a piece (up/down/left/right).
  * Returns array of pieces looked up from piecesById.
  */
@@ -213,6 +227,7 @@ if (typeof module !== 'undefined' && module.exports) {
     worldToScreen,
     generateEdges,
     getNeighbors,
+    isEdgePiece,
     createGameState,
     trySnap,
     mergeGroups,
@@ -225,6 +240,7 @@ if (typeof module !== 'undefined' && module.exports) {
     worldToScreen,
     generateEdges,
     getNeighbors,
+    isEdgePiece,
     createGameState,
     trySnap,
     mergeGroups,

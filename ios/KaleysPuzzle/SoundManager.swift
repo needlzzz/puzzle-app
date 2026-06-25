@@ -1,10 +1,19 @@
 import AVFoundation
+import UIKit
 
-/// Manages puzzle sound effects.
+/// Manages puzzle sound effects and haptics.
+/// Honors the global mute setting and adds gentle haptic feedback so the
+/// experience stays delightful even with the sound off.
 final class SoundManager {
     static let shared = SoundManager()
 
     private var players: [String: AVAudioPlayer] = [:]
+    private let impactLight = UIImpactFeedbackGenerator(style: .light)
+    private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
+    private let notify = UINotificationFeedbackGenerator()
+
+    /// Mirrors the persisted mute flag; read once at launch, kept in sync by the UI.
+    var isMuted: Bool = Storage.isMuted
 
     private init() {
         prepareSound("snap")
@@ -25,8 +34,14 @@ final class SoundManager {
         }
     }
 
+    func setMuted(_ muted: Bool) {
+        isMuted = muted
+        Storage.isMuted = muted
+    }
+
     func playSnap() {
         play("snap")
+        impactLight.impactOccurred()
     }
 
     func playPickup() {
@@ -35,14 +50,21 @@ final class SoundManager {
 
     func playWin() {
         play("win")
+        notify.notificationOccurred(.success)
     }
 
     func playDrop() {
         play("drop")
     }
 
+    /// Played when the child crosses a progress milestone (25%/50%/75%/edges done).
+    func playMilestone() {
+        play("snap")
+        impactMedium.impactOccurred()
+    }
+
     private func play(_ name: String) {
-        guard let player = players[name] else { return }
+        guard !isMuted, let player = players[name] else { return }
         player.currentTime = 0
         player.play()
     }

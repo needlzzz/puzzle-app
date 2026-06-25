@@ -11,4 +11,7 @@
     <color name="btn_bg">#14FFFFFF</color>
     <color name="btn_border">#66FFFFFF</color>
     <color name="btn_active">#40FFFFFF</color>
+    <color name="accent_teal">#FF00D4AA</color>
+    <color name="accent_teal_dim">#2600D4AA</color>
+    <color name="progress_track">#1FFFFFFF</color>
 </resources>

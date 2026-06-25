@@ -6,68 +6,137 @@
     android:background="@color/background_dark">
 
     <!-- Start Screen -->
-    <LinearLayout
+    <ScrollView
         android:id="@+id/startScreen"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="24dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/title"
-            android:textColor="@color/white"
-            android:textSize="32sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/subtitle"
-            android:textColor="@color/text_secondary"
-            android:textSize="16sp"
-            android:textStyle="italic" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/choose_difficulty"
-            android:textColor="@color/text_muted"
-            android:textSize="18sp" />
+        android:fillViewport="true">
 
         <LinearLayout
-            android:id="@+id/difficultyButtons"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="center"
-            android:orientation="horizontal">
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="24dp">
 
-            <Button
-                android:id="@+id/btn20"
-                style="@style/DifficultyButton"
-                android:text="@string/pieces_20" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/title"
+                android:textColor="@color/white"
+                android:textSize="30sp"
+                android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/btn50"
-                style="@style/DifficultyButton"
-                android:text="@string/pieces_50" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/subtitle"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp"
+                android:textStyle="italic" />
 
-            <Button
-                android:id="@+id/btn100"
-                style="@style/DifficultyButton"
-                android:text="@string/pieces_100" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:text="@string/pick_animal"
+                android:textColor="@color/accent_teal"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/btn150"
-                style="@style/DifficultyButton"
-                android:text="@string/pieces_150" />
+            <GridLayout
+                android:id="@+id/animalGrid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:columnCount="4" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/how_big"
+                android:textColor="@color/accent_teal"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/difficultyButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnTiny"
+                    style="@style/DifficultyButton"
+                    android:text="@string/tier_tiny" />
+
+                <Button
+                    android:id="@+id/btnSmall"
+                    style="@style/DifficultyButton"
+                    android:text="@string/tier_small" />
+
+                <Button
+                    android:id="@+id/btnMedium"
+                    style="@style/DifficultyButton"
+                    android:text="@string/tier_medium" />
+
+                <Button
+                    android:id="@+id/btnBig"
+                    style="@style/DifficultyButton"
+                    android:text="@string/tier_big" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/muteBtn"
+                    style="@style/BarButton"
+                    android:text="@string/sound_on" />
+
+                <Button
+                    android:id="@+id/timerBtn"
+                    style="@style/BarButton"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/timer_off" />
+
+                <Button
+                    android:id="@+id/howToBtn"
+                    style="@style/BarButton"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/how_to_play" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/collectionLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/your_animals"
+                android:textColor="@color/text_muted"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/collectionEmojis"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:visibility="gone" />
         </LinearLayout>
-    </LinearLayout>
+    </ScrollView>
 
     <!-- Game Screen -->
     <FrameLayout
@@ -91,7 +160,7 @@
             android:background="@drawable/bar_background"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="20dp"
+            android:paddingHorizontal="16dp"
             android:paddingVertical="8dp">
 
             <TextView
@@ -101,29 +170,194 @@
                 android:fontFamily="monospace"
                 android:text="⏱ 00:00"
                 android:textColor="@color/white"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:visibility="gone" />
 
             <TextView
-                android:id="@+id/pieceCounter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:fontFamily="monospace"
-                android:text="0 / 0"
-                android:textColor="@color/white"
+                android:layout_marginStart="4dp"
+                android:text="🐾"
                 android:textSize="14sp" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="110dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/accent_teal"
+                android:progressBackgroundTint="@color/progress_track" />
+
+            <Button
+                android:id="@+id/edgesBtn"
+                style="@style/BarButton"
+                android:layout_marginStart="12dp"
+                android:text="@string/edges" />
 
             <Button
                 android:id="@+id/hintBtn"
                 style="@style/BarButton"
-                android:layout_marginStart="16dp"
-                android:text="@string/hint" />
+                android:layout_marginStart="8dp"
+                android:text="@string/peek" />
+
+            <Button
+                android:id="@+id/centerBtn"
+                style="@style/BarButton"
+                android:layout_marginStart="8dp"
+                android:text="@string/center" />
 
             <Button
                 android:id="@+id/newBtn"
                 style="@style/BarButton"
                 android:layout_marginStart="8dp"
                 android:text="@string/new_puzzle" />
+        </LinearLayout>
+
+        <!-- Milestone banner -->
+        <TextView
+            android:id="@+id/milestoneBanner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="64dp"
+            android:background="@drawable/bar_background"
+            android:backgroundTint="@color/accent_teal"
+            android:paddingHorizontal="18dp"
+            android:paddingVertical="8dp"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- Tutorial Overlay -->
+    <FrameLayout
+        android:id="@+id/tutorialOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/overlay_dark"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="24dp"
+            android:background="@drawable/win_background"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/tutorial_title"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="@string/tutorial_step1"
+                android:textColor="@color/text_secondary"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/tutorial_step2"
+                android:textColor="@color/text_secondary"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/tutorial_step3"
+                android:textColor="@color/text_secondary"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/tutorial_step4"
+                android:textColor="@color/text_secondary"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/letsGoBtn"
+                style="@style/DifficultyButton"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:text="@string/lets_go" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Confirm New Puzzle Overlay -->
+    <FrameLayout
+        android:id="@+id/confirmOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/overlay_dark"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="24dp"
+            android:background="@drawable/win_background"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🧩"
+                android:textSize="40sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/confirm_title"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/confirm_msg"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/keepPlayingBtn"
+                    style="@style/BarButton"
+                    android:text="@string/keep_playing" />
+
+                <Button
+                    android:id="@+id/confirmNewBtn"
+                    style="@style/DifficultyButton"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/confirm_new" />
+            </LinearLayout>
         </LinearLayout>
     </FrameLayout>
 
@@ -147,38 +381,53 @@
             android:background="@drawable/win_background"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingHorizontal="60dp"
-            android:paddingVertical="40dp">
+            android:paddingHorizontal="48dp"
+            android:paddingVertical="36dp">
+
+            <TextView
+                android:id="@+id/winAnimalEmoji"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎉"
+                android:textSize="60sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/puzzle_complete"
+                android:layout_marginTop="10dp"
+                android:text="@string/you_did_it"
                 android:textColor="@color/white"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/winTime"
+                android:id="@+id/winAnimalName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="6dp"
                 android:textColor="@color/text_secondary"
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/winPieces"
+                android:id="@+id/winTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="16sp" />
+                android:layout_marginTop="10dp"
+                android:textColor="@color/text_muted"
+                android:textSize="15sp"
+                android:visibility="gone" />
 
             <Button
-                android:id="@+id/winNewBtn"
+                android:id="@+id/playAgainBtn"
                 style="@style/DifficultyButton"
                 android:layout_marginTop="20dp"
-                android:text="@string/new_puzzle_btn" />
+                android:text="@string/play_again" />
+
+            <Button
+                android:id="@+id/chooseAnotherBtn"
+                style="@style/BarButton"
+                android:layout_marginTop="10dp"
+                android:text="@string/choose_another" />
         </LinearLayout>
     </FrameLayout>
 

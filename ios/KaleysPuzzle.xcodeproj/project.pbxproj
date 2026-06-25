@@ -17,6 +17,8 @@
 		A1000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000008 /* Assets.xcassets */; };
 		A1000009 /* PieceTrayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000009 /* PieceTrayView.swift */; };
 		A100000A /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000A /* SoundManager.swift */; };
+		A100000F /* Animals.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000F /* Animals.swift */; };
+		A1000010 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000010 /* Storage.swift */; };
 		A100000B /* snap.wav in Resources */ = {isa = PBXBuildFile; fileRef = A200000B /* snap.wav */; };
 		A100000C /* pickup.wav in Resources */ = {isa = PBXBuildFile; fileRef = A200000C /* pickup.wav */; };
 		A100000D /* win.wav in Resources */ = {isa = PBXBuildFile; fileRef = A200000D /* win.wav */; };
@@ -34,6 +36,8 @@
 		A2000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A2000009 /* PieceTrayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PieceTrayView.swift; sourceTree = "<group>"; };
 		A200000A /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		A200000F /* Animals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animals.swift; sourceTree = "<group>"; };
+		A2000010 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
 		A200000B /* snap.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = snap.wav; sourceTree = "<group>"; };
 		A200000C /* pickup.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pickup.wav; sourceTree = "<group>"; };
 		A200000D /* win.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = win.wav; sourceTree = "<group>"; };
@@ -72,6 +76,8 @@
 				A2000006 /* AnimalImageLoader.swift */,
 				A2000007 /* ConfettiView.swift */,
 				A200000A /* SoundManager.swift */,
+				A200000F /* Animals.swift */,
+				A2000010 /* Storage.swift */,
 				A5000004 /* Sounds */,
 				A2000008 /* Assets.xcassets */,
 			);
@@ -179,6 +185,8 @@
 				A1000006 /* AnimalImageLoader.swift in Sources */,
 				A1000007 /* ConfettiView.swift in Sources */,
 				A100000A /* SoundManager.swift in Sources */,
+				A100000F /* Animals.swift in Sources */,
+				A1000010 /* Storage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

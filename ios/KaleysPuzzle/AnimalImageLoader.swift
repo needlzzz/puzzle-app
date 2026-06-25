@@ -23,6 +23,7 @@ enum AnimalImageLoader {
     ]
 
     /// Try loading from bundled images first (instant), then network sources.
+    /// Used for the "Surprise me" tile — any animal is welcome.
     static func loadImage() async -> UIImage {
         // Source 1: Bundled animal images (instant, no network needed)
         if let img = loadBundledImage() {
@@ -55,6 +56,34 @@ enum AnimalImageLoader {
 
         // Last resort: procedural fallback
         return generateProceduralImage()
+    }
+
+    /// Load an image of a specific chosen animal. Falls back through network
+    /// sources keyed to that animal, then a procedural picture of it.
+    /// The "surprise" key defers to the bundled-first random strategy above.
+    static func loadImage(for animalKey: String) async -> UIImage {
+        if animalKey == Animals.surpriseKey {
+            return await loadImage()
+        }
+
+        let animal = Animals.animal(forKey: animalKey)
+        let w = PuzzleEngine.imageW
+        let h = PuzzleEngine.imageH
+
+        // Source 1: Unsplash photo of this exact animal
+        let unsplashURL = "https://images.unsplash.com/photo-\(animal.unsplashId)?w=\(w)&h=\(h)&fit=crop&auto=format&q=70"
+        if let img = await tryLoadImage(from: unsplashURL, timeout: 3) {
+            return img
+        }
+
+        // Source 2: Lorem Flickr keyed to the animal name
+        let flickrURL = "https://loremflickr.com/\(w)/\(h)/\(animal.name.lowercased())"
+        if let img = await tryLoadImage(from: flickrURL, timeout: 3) {
+            return img
+        }
+
+        // Last resort: a friendly procedural picture of the chosen animal
+        return generateProceduralImage(for: animal)
     }
 
     // MARK: - Bundled Images
@@ -154,29 +183,14 @@ enum AnimalImageLoader {
 
     // MARK: - Procedural Fallback
 
-    private struct Animal {
-        let name: String
-        let emoji: String
-        let colors: [UIColor]
+    static func generateProceduralImage() -> UIImage {
+        return generateProceduralImage(for: Animals.all.randomElement()!)
     }
 
-    private static let animals: [Animal] = [
-        Animal(name: "Lion", emoji: "🦁", colors: [UIColor(hex: 0xF4A460), UIColor(hex: 0xCD853F), UIColor(hex: 0xDEB887)]),
-        Animal(name: "Elephant", emoji: "🐘", colors: [UIColor(hex: 0x708090), UIColor(hex: 0x778899), UIColor(hex: 0xB0C4DE)]),
-        Animal(name: "Fox", emoji: "🦊", colors: [UIColor(hex: 0xFF8C00), UIColor(hex: 0xFF6347), UIColor(hex: 0xFFD700)]),
-        Animal(name: "Dolphin", emoji: "🐬", colors: [UIColor(hex: 0x00CED1), UIColor(hex: 0x1E90FF), UIColor(hex: 0x87CEEB)]),
-        Animal(name: "Owl", emoji: "🦉", colors: [UIColor(hex: 0x2E0854), UIColor(hex: 0x4B0082), UIColor(hex: 0x6A0DAD)]),
-        Animal(name: "Penguin", emoji: "🐧", colors: [UIColor(hex: 0x4682B4), UIColor(hex: 0xB0E0E6), UIColor(hex: 0xF0F8FF)]),
-        Animal(name: "Tiger", emoji: "🐯", colors: [UIColor(hex: 0xFF8C00), UIColor(hex: 0xFF4500), UIColor(hex: 0xFFD700)]),
-        Animal(name: "Bear", emoji: "🐻", colors: [UIColor(hex: 0x228B22), UIColor(hex: 0x2E8B57), UIColor(hex: 0x90EE90)]),
-        Animal(name: "Cat", emoji: "🐱", colors: [UIColor(hex: 0xFF69B4), UIColor(hex: 0xFFB6C1), UIColor(hex: 0xFFC0CB)]),
-        Animal(name: "Wolf", emoji: "🐺", colors: [UIColor(hex: 0x2F4F4F), UIColor(hex: 0x696969), UIColor(hex: 0xA9A9A9)]),
-    ]
-
-    static func generateProceduralImage() -> UIImage {
+    static func generateProceduralImage(for chosen: Animals.Animal) -> UIImage {
         let w = CGFloat(PuzzleEngine.imageW)
         let h = CGFloat(PuzzleEngine.imageH)
-        let animal = animals.randomElement()!
+        let animal = (name: chosen.name, emoji: chosen.emoji, colors: chosen.colors)
 
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: w, height: h))
         return renderer.image { ctx in
